@@ -1,0 +1,36 @@
+# Unity caches / generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# User and IDE
+UserSettings/
+*.user
+*.userprefs
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.sln
+
+# Builds / packages
+*.apk
+*.aab
+*.ipa
+*.app
+*.unitypackage
+*.unitypackage.meta
+
+# Addressables / generated
+ServerData/
+Assets/AddressableAssetsData/*/*.bin*
+Assets/Addressables_Temp/
+
+# OS junk
+.DS_Store
+Thumbs.db
