@@ -8,6 +8,9 @@
 [Mm]emoryCaptures/
 [Rr]ecordings/
 
+# Unity recoveries / autosaves
+Assets/_Recovery/
+
 # User and IDE
 UserSettings/
 *.user
