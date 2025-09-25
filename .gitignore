@@ -10,6 +10,7 @@
 
 # Unity recoveries / autosaves
 Assets/_Recovery/
+Assets/_Recovery.meta
 
 # User and IDE
 UserSettings/
