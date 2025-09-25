@@ -20,15 +20,30 @@ public class TerrainChunk : MonoBehaviour
 
     void Awake()
     {
-        mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
-        poly = GetComponent<PolygonCollider2D>();
-        if (physicsMaterial != null) poly.sharedMaterial = physicsMaterial;
+        EnsureComponents();
+    }
+
+    void EnsureComponents()
+    {
+        var mf = GetComponent<MeshFilter>();
+        if (mf.sharedMesh == null)
+        {
+            mesh = new Mesh();
+            mf.sharedMesh = mesh;
+        }
+        else
+        {
+            mesh = mf.sharedMesh;
+        }
+
+        if (poly == null) poly = GetComponent<PolygonCollider2D>();
+        if (physicsMaterial != null && poly != null) poly.sharedMaterial = physicsMaterial;
     }
 
     // Generate with seam smoothing passed in
     public float Generate(int chunkIndex, float startHeight, bool useSeam, float seamSmooth, int localSeed = 0)
     {
+        EnsureComponents();
         System.Random rnd = new System.Random(localSeed + chunkIndex);
 
         int columns = pointsPerChunk;
@@ -102,9 +117,12 @@ public class TerrainChunk : MonoBehaviour
         for (int i = 0; i < columns; i++) polyPath[i] = new Vector2(verts[i].x, verts[i].y);
         for (int i = 0; i < columns; i++) polyPath[columns + i] = new Vector2(verts[2 * columns - 1 - i].x, verts[2 * columns - 1 - i].y);
 
-        poly.pathCount = 1;
-        poly.SetPath(0, polyPath);
-        poly.CreateMesh(false, false);
+        if (poly != null)
+        {
+            poly.pathCount = 1;
+            poly.SetPath(0, polyPath);
+            poly.CreateMesh(false, false);
+        }
 
         return lastY;
     }
@@ -112,6 +130,7 @@ public class TerrainChunk : MonoBehaviour
     // Generate variant that enforces end seam continuity (used when inserting chunk on the left)
     public float GenerateBackward(int chunkIndex, float endHeight, float seamSmooth, int localSeed = 0)
     {
+        EnsureComponents();
         int columns = pointsPerChunk;
         Vector3[] verts = new Vector3[columns * 2];
         Vector2[] uvs = new Vector2[columns * 2];
@@ -179,23 +198,28 @@ public class TerrainChunk : MonoBehaviour
         for (int i = 0; i < columns; i++) polyPath[i] = new Vector2(verts[i].x, verts[i].y);
         for (int i = 0; i < columns; i++) polyPath[columns + i] = new Vector2(verts[2 * columns - 1 - i].x, verts[2 * columns - 1 - i].y);
 
-        poly.pathCount = 1;
-        poly.SetPath(0, polyPath);
-        poly.CreateMesh(false, false);
+        if (poly != null)
+        {
+            poly.pathCount = 1;
+            poly.SetPath(0, polyPath);
+            poly.CreateMesh(false, false);
+        }
 
         return verts[columns - 1].y;
     }
 
     public float GetFirstTopHeight()
     {
-        var v = mesh.vertices;
+        EnsureComponents();
+        var v = mesh != null ? mesh.vertices : null;
         return v != null && v.Length > 0 ? v[0].y : 0f;
     }
 
     public float GetLastTopHeight()
     {
         int columns = pointsPerChunk;
-        var v = mesh.vertices;
+        EnsureComponents();
+        var v = mesh != null ? mesh.vertices : null;
         return v != null && v.Length >= columns ? v[columns - 1].y : 0f;
     }
 }

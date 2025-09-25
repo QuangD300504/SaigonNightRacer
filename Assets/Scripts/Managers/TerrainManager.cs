@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[ExecuteAlways]
 public class TerrainManager : MonoBehaviour
 {
     [Header("Chunk Settings")]
@@ -36,7 +37,7 @@ public class TerrainManager : MonoBehaviour
         // clear any children
         foreach (Transform child in chunkParent)
         {
-            Destroy(child.gameObject);
+            if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
         }
         activeChunks.Clear();
         lastHeight = 0f;
@@ -64,6 +65,27 @@ public class TerrainManager : MonoBehaviour
         TerrainChunk last = null;
         foreach (var c in activeChunks) last = c;
         if (last != null) rightmostX = last.transform.position.x;
+    }
+
+    [ContextMenu("Regenerate Terrain")]
+    void RegenerateTerrainContextMenu()
+    {
+        if (chunkParent == null) chunkParent = transform;
+        InitializeChunks();
+    }
+
+    [ContextMenu("Ungenerate Terrain (Clear)")]
+    public void UngenerateTerrain()
+    {
+        if (chunkParent == null) chunkParent = transform;
+        foreach (Transform child in chunkParent)
+        {
+            if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+        }
+        activeChunks.Clear();
+        lastHeight = 0f;
+        generatedChunkCount = 0;
+        rightmostX = 0f;
     }
 
     void Update()

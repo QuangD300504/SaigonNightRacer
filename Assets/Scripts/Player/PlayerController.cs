@@ -4,12 +4,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
-    public float lateralSpeed = 5f;    // A/D left-right
+    public float lateralSpeed = 5f;    // A/D left-right (used only if BikeController missing)
     public float jumpForce = 12f;
-    public float baseSpeed = 6f;       // used for display
-    public float speedIncreaseRate = 0.02f; // per second
-    public float boostMultiplier = 2f;
-    public float boostDuration = 1.2f;
+    // Movement speed is driven by BikeController; no base speed or auto increase here
 
     [Header("Input Actions")]
     public InputAction moveAction;
@@ -20,6 +17,7 @@ public class PlayerController : MonoBehaviour
     Rigidbody2D rb;
     bool grounded = true;
     float currentSpeed;
+    BikeController bikeController;
     Vector2 moveInput;
     
     [Header("Terrain Effects")]
@@ -28,7 +26,8 @@ public class PlayerController : MonoBehaviour
 
     void Awake() {
         rb = GetComponent<Rigidbody2D>();
-        currentSpeed = baseSpeed;
+        currentSpeed = 0f;
+        bikeController = GetComponent<BikeController>();
     }
 
     void OnEnable() {
@@ -49,13 +48,21 @@ public class PlayerController : MonoBehaviour
         // Get input values
         moveInput = moveAction.ReadValue<Vector2>();
         bool jumpPressed = jumpAction.WasPressedThisFrame();
-        bool slowDownPressed = slowDownAction.IsPressed();
-        bool boostPressed = boostAction.WasPressedThisFrame();
+
 
         // left/right movement
-        Vector2 vel = rb.linearVelocity;
-        vel.x = moveInput.x * lateralSpeed;
-        rb.linearVelocity = new Vector2(vel.x, rb.linearVelocity.y);
+        if (bikeController != null)
+        {
+            // use BikeController signed speed for proper direction changes and coasting
+            float vx = bikeController.CurrentSignedSpeed;
+            rb.linearVelocity = new Vector2(vx, rb.linearVelocity.y);
+        }
+        else
+        {
+            Vector2 vel = rb.linearVelocity;
+            vel.x = moveInput.x * lateralSpeed;
+            rb.linearVelocity = new Vector2(vel.x, rb.linearVelocity.y);
+        }
 
         // jump
         if (jumpPressed && grounded) {
@@ -63,28 +70,15 @@ public class PlayerController : MonoBehaviour
             grounded = false;
         }
 
-        // slow down
-        if (slowDownPressed) {
-            currentSpeed = Mathf.Max(1f, currentSpeed - 10f * Time.deltaTime);
-        } else {
-            // gradually increase
-            currentSpeed += speedIncreaseRate * Time.deltaTime;
-        }
+        // Movement speed source now comes from BikeController if present
+        if (bikeController != null) currentSpeed = bikeController.CurrentSpeed;
+        else currentSpeed = Mathf.Abs(rb.linearVelocity.x);
 
-        // boost
-        if (boostPressed) {
-            StartCoroutine(DoBoost());
-        }
-
+        // boost (press Shift)
+        if (boostAction.WasPressedThisFrame() && bikeController != null) bikeController.ActivateBoost();
+        
         // send currentSpeed to GameManager so spawner can use it (with terrain modifier)
         GameManager.Instance.SetWorldSpeed(currentSpeed * speedModifier);
-    }
-
-    System.Collections.IEnumerator DoBoost() {
-        float old = currentSpeed;
-        currentSpeed *= boostMultiplier;
-        yield return new WaitForSeconds(boostDuration);
-        currentSpeed = old;
     }
 
     void OnCollisionEnter2D(Collision2D c) {
