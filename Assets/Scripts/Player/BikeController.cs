@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class BikeController : MonoBehaviour
@@ -15,31 +14,33 @@ public class BikeController : MonoBehaviour
     public bool instantBoost = true;
     public float overspeedBleedRate = 6f;
 
-    [Header("Tuning")]
+    [Header("Tuning (realistic feel)")]
     public float accelerationRate = 5f;
     public float decelerationRate = 3.5f;
     public float brakingRate = 9f;
 
     [Header("Drive / Wheelie Control")]
-    public float wheelTorque = 150f;
-    public float antiWheelieStrength = 40f;
+    public float wheelTorque = 150f;           
+    public float antiWheelieStrength = 40f;    
 
     [Header("Slope Physics")]
-    public float gravityMultiplier = 1.2f;
+    public float gravityMultiplier = 1.2f;     
 
     [Header("Wheel References")]
     public Transform frontWheelTransform;
     public Transform backWheelTransform;
-
-    [Header("Wheel Joints")]
-    public WheelJoint2D backWheelJoint; // main drive
-    public WheelJoint2D frontWheelJoint; // free wheel
+    
+    [Header("WheelJoint2D References")]
+    public WheelJoint2D backWheelJoint;
 
     [Header("Jump Settings")]
     public float jumpForce = 12f;
-    public float groundCheckRadius = 0.1f;
-    public LayerMask groundLayerMask;
+    public float groundCheckRadius = 0.1f;     
+    public LayerMask groundLayerMask;          
     public float jumpCooldown = 0.15f;
+
+    [Header("Rotation Controls")]
+    public float rotationTorque = 5f; // how strong the spin is
 
     private Rigidbody2D rb;
     private PlayerController playerController;
@@ -49,9 +50,9 @@ public class BikeController : MonoBehaviour
     private float currentSpeed, targetSpeed;
     private bool frontGrounded, backGrounded;
     private float lastJumpTime = -999f;
-    private bool boosting;
 
     private Vector2? frontNormal, backNormal;
+    private bool boosting;
 
     public float CurrentSpeed => Mathf.Abs(currentSpeed);
     public float CurrentSignedSpeed => currentSpeed;
@@ -59,24 +60,19 @@ public class BikeController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.centerOfMass = new Vector2(0.12f, -0.18f);
-        rb.linearDamping = 0.05f;
-        rb.angularDamping = 3f;
+        rb.centerOfMass = new Vector2(0.12f, -0.18f);   
+        rb.linearDamping = 0.05f;                       
+        rb.angularDamping = 3f;                         
 
         playerController = GetComponent<PlayerController>();
 
         if (frontWheelTransform) frontWheelRB = frontWheelTransform.GetComponent<Rigidbody2D>();
-        if (backWheelTransform) backWheelRB = backWheelTransform.GetComponent<Rigidbody2D>();
+        if (backWheelTransform)  backWheelRB  = backWheelTransform.GetComponent<Rigidbody2D>();
 
         if (backWheelJoint != null)
         {
             backMotor = backWheelJoint.motor;
             backWheelJoint.useMotor = true;
-        }
-
-        if (frontWheelJoint != null)
-        {
-            frontWheelJoint.useMotor = false; // free wheel
         }
 
         currentSpeed = baseSpeed;
@@ -87,6 +83,7 @@ public class BikeController : MonoBehaviour
         HandleMovementInput();
         CheckGrounded();
         HandleJumpInput();
+        HandleRotationInput();
     }
 
     void FixedUpdate()
@@ -115,9 +112,9 @@ public class BikeController : MonoBehaviour
             float rate;
             if (isSlowingDown) rate = brakingRate;
             else if (Mathf.Abs(targetSpeed) < 0.01f) rate = decelerationRate;
-            else if (Mathf.Sign(targetSpeed) != Mathf.Sign(currentSpeed) && Mathf.Abs(currentSpeed) > 0.01f)
+            else if (Mathf.Sign(targetSpeed) != Mathf.Sign(currentSpeed) && Mathf.Abs(currentSpeed) > 0.01f) 
                 rate = brakingRate;
-            else
+            else 
                 rate = accelerationRate * (IsBoosting() ? boostAccelMultiplier : 1f);
 
             currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, rate * Time.deltaTime);
@@ -132,9 +129,9 @@ public class BikeController : MonoBehaviour
 
     private void ApplyMotor()
     {
-        if (backWheelJoint == null) return;
+        if (backWheelJoint == null || backWheelRB == null) return;
 
-        float targetAngularSpeed = -currentSpeed * 200f; // convert linear → angular speed
+        float targetAngularSpeed = -currentSpeed * 200f;
         backMotor.motorSpeed = targetAngularSpeed;
         backMotor.maxMotorTorque = wheelTorque;
         backWheelJoint.motor = backMotor;
@@ -158,23 +155,26 @@ public class BikeController : MonoBehaviour
     {
         if (playerController == null || playerController.jumpAction == null) return;
 
-        bool pressed = playerController.jumpAction.WasPressedThisFrame();
-        if (!pressed) return;
-        if (Time.time - lastJumpTime < jumpCooldown) return;
-
-        // Require BOTH wheels grounded for stable jump
-        if (!(frontGrounded && backGrounded)) return;
-
-        // Main jump force at center of mass → balanced lift
-        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-        // Optional: tiny stabilizer on wheels (10–20% of main force)
-        if (frontWheelRB != null)
-            frontWheelRB.AddForce(Vector2.up * (jumpForce * 0.4f), ForceMode2D.Impulse);
-        if (backWheelRB != null)
-            backWheelRB.AddForce(Vector2.up * (jumpForce * 0.2f), ForceMode2D.Impulse);
-
-        lastJumpTime = Time.time;
+        if (playerController.jumpAction.WasPressedThisFrame()
+            && Time.time - lastJumpTime >= jumpCooldown
+            && frontGrounded && backGrounded) // ✅ require both
+        {
+            // Apply jump force to main bike body
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            
+            // Apply jump force to wheels for proper bike jump
+            if (frontWheelRB != null)
+            {
+                frontWheelRB.AddForce(Vector2.up * jumpForce * 0.5f, ForceMode2D.Impulse);
+            }
+            
+            if (backWheelRB != null)
+            {
+                backWheelRB.AddForce(Vector2.up * jumpForce * 0.5f, ForceMode2D.Impulse);
+            }
+            
+            lastJumpTime = Time.time;
+        }
     }
 
     private void CheckGrounded()
@@ -206,7 +206,7 @@ public class BikeController : MonoBehaviour
     public void ActivateBoost()
     {
         if (IsBoosting()) return;
-        if (instantBoost)
+        if (instantBoost) 
             currentSpeed = Mathf.Clamp(currentSpeed * boostMultiplier, -maxSpeed * boostMultiplier, maxSpeed * boostMultiplier);
         StartCoroutine(BoostRoutine());
     }
@@ -219,6 +219,46 @@ public class BikeController : MonoBehaviour
     }
 
     private bool IsBoosting() => boosting;
+
+    public void SetWheelFriction(float backDrag, float frontDrag)
+    {
+        if (backWheelRB) backWheelRB.linearDamping = backDrag;
+        if (frontWheelRB) frontWheelRB.linearDamping = frontDrag;
+    }
+
+    private void HandleRotationInput()
+    {
+        // Only allow rotation when bike is in the air (not grounded)
+        bool isInAir = !(frontGrounded || backGrounded);
+        
+        if (!isInAir) return; // Don't rotate when grounded
+        
+        // Debug logging
+        if (playerController != null)
+        {
+            bool qPressed = playerController.rotateLeftAction != null && playerController.rotateLeftAction.IsPressed();
+            bool ePressed = playerController.rotateRightAction != null && playerController.rotateRightAction.IsPressed();
+            
+            if (qPressed || ePressed)
+            {
+                Debug.Log($"Rotation input detected - Q: {qPressed}, E: {ePressed}, InAir: {isInAir}");
+            }
+        }
+        
+        // Spin backward (Q) - using Input System
+        if (playerController != null && playerController.rotateLeftAction != null && playerController.rotateLeftAction.IsPressed())
+        {
+            rb.AddTorque(rotationTorque);
+            Debug.Log($"Applying left torque: {rotationTorque}");
+        }
+
+        // Spin forward (E) - using Input System
+        if (playerController != null && playerController.rotateRightAction != null && playerController.rotateRightAction.IsPressed())
+        {
+            rb.AddTorque(-rotationTorque);
+            Debug.Log($"Applying right torque: {-rotationTorque}");
+        }
+    }
 
     void OnDrawGizmosSelected()
     {

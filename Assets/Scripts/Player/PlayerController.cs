@@ -11,6 +11,8 @@ public class PlayerController : MonoBehaviour
     public InputAction jumpAction;
     public InputAction slowDownAction;
     public InputAction boostAction;
+    public InputAction rotateLeftAction;
+    public InputAction rotateRightAction;
 
     Rigidbody2D rb;
     float currentSpeed;
@@ -31,6 +33,8 @@ public class PlayerController : MonoBehaviour
         jumpAction.Enable();
         slowDownAction.Enable();
         boostAction.Enable();
+        rotateLeftAction.Enable();
+        rotateRightAction.Enable();
     }
 
     void OnDisable() {
@@ -38,6 +42,8 @@ public class PlayerController : MonoBehaviour
         jumpAction.Disable();
         slowDownAction.Disable();
         boostAction.Disable();
+        rotateLeftAction.Disable();
+        rotateRightAction.Disable();
     }
 
     void Update() {
