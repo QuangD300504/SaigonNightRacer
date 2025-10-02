@@ -1,10 +1,14 @@
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(PolygonCollider2D))]
+[RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
+[RequireComponent(typeof(PolygonCollider2D))]
+[RequireComponent(typeof(RoadGenerator))]
 public class TerrainChunk : MonoBehaviour
 {
     Mesh mesh;
     PolygonCollider2D poly;
+    RoadGenerator roadGenerator;
 
     // parameters set per-chunk
     public int pointsPerChunk = 50;
@@ -38,6 +42,8 @@ public class TerrainChunk : MonoBehaviour
 
         if (poly == null) poly = GetComponent<PolygonCollider2D>();
         if (physicsMaterial != null && poly != null) poly.sharedMaterial = physicsMaterial;
+        
+        if (roadGenerator == null) roadGenerator = GetComponent<RoadGenerator>();
     }
 
     // Generate with seam smoothing passed in
@@ -68,6 +74,17 @@ public class TerrainChunk : MonoBehaviour
             poly.pathCount = 1;
             poly.SetPath(0, polyPath);
             poly.CreateMesh(false, false);
+        }
+
+        // Generate road overlay
+        Vector3[] topVerts = new Vector3[columns];
+        for (int i = 0; i < columns; i++)
+        {
+            topVerts[i] = vertices[i];
+        }
+        if (roadGenerator != null)
+        {
+            roadGenerator.GenerateRoad(topVerts, columns);
         }
 
         return heights[columns - 1];
@@ -101,6 +118,17 @@ public class TerrainChunk : MonoBehaviour
             poly.pathCount = 1;
             poly.SetPath(0, polyPath);
             poly.CreateMesh(false, false);
+        }
+
+        // Generate road overlay
+        Vector3[] topVerts = new Vector3[columns];
+        for (int i = 0; i < columns; i++)
+        {
+            topVerts[i] = vertices[i];
+        }
+        if (roadGenerator != null)
+        {
+            roadGenerator.GenerateRoad(topVerts, columns);
         }
 
         return heights[columns - 1];

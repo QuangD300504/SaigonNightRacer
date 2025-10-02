@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4884434777921595807}
   - component: {fileID: 268745637549266880}
   - component: {fileID: 4701736550608174482}
-  - component: {fileID: 838487536013410331}
+  - component: {fileID: -2486850068608623594}
   m_Layer: 8
   m_Name: Meteorite
   m_TagString: Untagged
@@ -30,8 +30,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -22.18467, y: 14.92561, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 4, y: 4, z: 4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -156,7 +156,7 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0.00000047683716, y: -0.104441404}
   m_Radius: 0.07256627
---- !u!114 &838487536013410331
+--- !u!114 &-2486850068608623594
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -165,10 +165,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8579010890676697872}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce7d05093411d5c408b182fbca5651df, type: 3}
+  m_Script: {fileID: 11500000, guid: 4aaea7a782906e4469b9a3da87e26355, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Meteorite
-  damage: 20
-  destroyDelay: 2
+  m_EditorClassIdentifier: Assembly-CSharp::MeteoriteObstacle
+  damage: 3
+  avoidPoints: 15
+  destroyDelay: 8
+  fallSpeed: 5
   impactVfxPrefab: {fileID: 0}
-  pool: {fileID: 0}

@@ -15,7 +15,8 @@ GameObject:
   - component: {fileID: -5832896178397378084}
   - component: {fileID: 6791727744800082006}
   - component: {fileID: 4589202972152696571}
-  m_Layer: 3
+  - component: {fileID: 1397902726333687986}
+  m_Layer: 6
   m_Name: ChunkPrefab_Template
   m_TagString: Ground
   m_Icon: {fileID: 0}
@@ -349,7 +350,19 @@ MonoBehaviour:
   seed: 0
   seamBlendPoints: 4
   physicsMaterial: {fileID: 0}
-  hasRoad: 1
-  roadWidth: 3
-  roadHeightOffset: 0.1
-  roadMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!114 &1397902726333687986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6265115567981513074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 240792a9f0d38dd4eac39a2c5620537f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoadGenerator
+  roadMaterial: {fileID: 2100000, guid: 68c67c59b1cce804b89c613c9a9e413b, type: 2}
+  roadHeightOffset: 0.05
+  roadThickness: 3
+  roadLayer: 6

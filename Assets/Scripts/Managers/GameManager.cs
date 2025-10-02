@@ -44,6 +44,18 @@ public class GameManager : MonoBehaviour
 
     public void PlayerHit(){
         lives--;
+        
+        // Apply knockback to player
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            var bikeController = player.GetComponent<BikeController>();
+            if (bikeController != null)
+            {
+                bikeController.ApplyKnockback();
+            }
+        }
+        
         if (lives <= 0) 
         {
             EndGame();

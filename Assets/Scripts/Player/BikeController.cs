@@ -35,12 +35,19 @@ public class BikeController : MonoBehaviour
 
     [Header("Jump Settings")]
     public float jumpForce = 12f;
-    public float groundCheckRadius = 0.1f;     
+        public float groundCheckRadius = 1.0f;     
     public LayerMask groundLayerMask;          
     public float jumpCooldown = 0.15f;
 
     [Header("Rotation Controls")]
     public float rotationTorque = 5f; // how strong the spin is
+    
+    [Header("Knockback Settings")]
+    [Tooltip("Force applied when player gets hit")]
+    public float knockbackForce = 20f;
+    [Tooltip("Duration of knockback effect")]
+    public float knockbackDuration = 0.8f;
+    
 
     private Rigidbody2D rb;
     private PlayerController playerController;
@@ -53,6 +60,8 @@ public class BikeController : MonoBehaviour
 
     private Vector2? frontNormal, backNormal;
     private bool boosting;
+    private bool isKnockedBack = false;
+    private float knockbackTimer = 0f;
 
     public float CurrentSpeed => Mathf.Abs(currentSpeed);
     public float CurrentSignedSpeed => currentSpeed;
@@ -80,6 +89,7 @@ public class BikeController : MonoBehaviour
 
     void Update()
     {
+        HandleKnockback();
         HandleMovementInput();
         CheckGrounded();
         HandleJumpInput();
@@ -157,7 +167,7 @@ public class BikeController : MonoBehaviour
 
         if (playerController.jumpAction.WasPressedThisFrame()
             && Time.time - lastJumpTime >= jumpCooldown
-            && frontGrounded && backGrounded) // ✅ require both
+            && (frontGrounded || backGrounded)) // ✅ require only one wheel
         {
             // Apply jump force to main bike body
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
@@ -186,14 +196,20 @@ public class BikeController : MonoBehaviour
         {
             frontGrounded = Physics2D.OverlapCircle(frontWheelTransform.position, groundCheckRadius, groundLayerMask);
             var hit = Physics2D.Raycast(frontWheelTransform.position, Vector2.down, groundCheckRadius * 2f, groundLayerMask);
-            if (hit.collider) frontNormal = hit.normal;
+            if (hit.collider) 
+            {
+                frontNormal = hit.normal;
+            }
         }
 
         if (backWheelTransform)
         {
             backGrounded = Physics2D.OverlapCircle(backWheelTransform.position, groundCheckRadius, groundLayerMask);
             var hit = Physics2D.Raycast(backWheelTransform.position, Vector2.down, groundCheckRadius * 2f, groundLayerMask);
-            if (hit.collider) backNormal = hit.normal;
+            if (hit.collider) 
+            {
+                backNormal = hit.normal;
+            }
         }
     }
 
@@ -202,7 +218,7 @@ public class BikeController : MonoBehaviour
         if (backGrounded && !frontGrounded)
             rb.AddTorque(-antiWheelieStrength * Time.fixedDeltaTime, ForceMode2D.Force);
     }
-
+    
     public void ActivateBoost()
     {
         if (IsBoosting()) return;
@@ -228,35 +244,21 @@ public class BikeController : MonoBehaviour
 
     private void HandleRotationInput()
     {
-        // Only allow rotation when bike is in the air (not grounded)
-        bool isInAir = !(frontGrounded || backGrounded);
+        // Allow rotation both in air and on ground
+        // bool isInAir = !(frontGrounded || backGrounded);
         
-        if (!isInAir) return; // Don't rotate when grounded
-        
-        // Debug logging
-        if (playerController != null)
-        {
-            bool qPressed = playerController.rotateLeftAction != null && playerController.rotateLeftAction.IsPressed();
-            bool ePressed = playerController.rotateRightAction != null && playerController.rotateRightAction.IsPressed();
-            
-            if (qPressed || ePressed)
-            {
-                Debug.Log($"Rotation input detected - Q: {qPressed}, E: {ePressed}, InAir: {isInAir}");
-            }
-        }
+        // if (!isInAir) return; // Don't rotate when grounded
         
         // Spin backward (Q) - using Input System
         if (playerController != null && playerController.rotateLeftAction != null && playerController.rotateLeftAction.IsPressed())
         {
             rb.AddTorque(rotationTorque);
-            Debug.Log($"Applying left torque: {rotationTorque}");
         }
 
         // Spin forward (E) - using Input System
         if (playerController != null && playerController.rotateRightAction != null && playerController.rotateRightAction.IsPressed())
         {
             rb.AddTorque(-rotationTorque);
-            Debug.Log($"Applying right torque: {-rotationTorque}");
         }
     }
 
@@ -265,5 +267,41 @@ public class BikeController : MonoBehaviour
         Gizmos.color = Color.yellow;
         if (frontWheelTransform) Gizmos.DrawWireSphere(frontWheelTransform.position, groundCheckRadius);
         if (backWheelTransform) Gizmos.DrawWireSphere(backWheelTransform.position, groundCheckRadius);
+    }
+    
+    /// <summary>
+    /// Apply knockback effect when player gets hit
+    /// </summary>
+    public void ApplyKnockback()
+    {
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+        
+        // Apply backward force
+        rb.AddForce(Vector2.left * knockbackForce, ForceMode2D.Impulse);
+        
+        // Apply upward force for dramatic effect
+        rb.AddForce(Vector2.up * knockbackForce * 0.5f, ForceMode2D.Impulse);
+        
+        // Add some rotation
+        float torque = Random.Range(-500f, 500f);
+        rb.AddTorque(torque);
+    }
+    
+    /// <summary>
+    /// Handle knockback timer and effects
+    /// </summary>
+    private void HandleKnockback()
+    {
+        if (isKnockedBack)
+        {
+            knockbackTimer -= Time.deltaTime;
+            
+            if (knockbackTimer <= 0f)
+            {
+                isKnockedBack = false;
+                knockbackTimer = 0f;
+            }
+        }
     }
 }
