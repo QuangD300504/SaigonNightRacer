@@ -2,12 +2,10 @@ using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
-[RequireComponent(typeof(PolygonCollider2D))]
 [RequireComponent(typeof(RoadGenerator))]
 public class TerrainChunk : MonoBehaviour
 {
     Mesh mesh;
-    PolygonCollider2D poly;
     RoadGenerator roadGenerator;
 
     // parameters set per-chunk
@@ -16,11 +14,8 @@ public class TerrainChunk : MonoBehaviour
     public float amplitude = 1.5f;
     public float frequency = 0.8f;
     public float bottomDepth = 8f;
-    public int seed = 0;
     [Tooltip("How many leading vertices to blend with previous chunk height for a smoother seam")]
     public int seamBlendPoints = 4;
-    [Tooltip("Optional low-friction material to reduce sticking on seams")]
-    public PhysicsMaterial2D physicsMaterial;
 
     void Awake()
     {
@@ -40,9 +35,6 @@ public class TerrainChunk : MonoBehaviour
             mesh = mf.sharedMesh;
         }
 
-        if (poly == null) poly = GetComponent<PolygonCollider2D>();
-        if (physicsMaterial != null && poly != null) poly.sharedMaterial = physicsMaterial;
-        
         if (roadGenerator == null) roadGenerator = GetComponent<RoadGenerator>();
     }
 
@@ -67,25 +59,8 @@ public class TerrainChunk : MonoBehaviour
         // Apply mesh data
         TerrainMeshGenerator.ApplyMeshData(mesh, vertices, uvs, triangles);
 
-        // Generate and apply collider
-        Vector2[] polyPath = TerrainMeshGenerator.GenerateColliderPath(vertices, columns);
-        if (poly != null)
-        {
-            poly.pathCount = 1;
-            poly.SetPath(0, polyPath);
-            poly.CreateMesh(false, false);
-        }
-
         // Generate road overlay
-        Vector3[] topVerts = new Vector3[columns];
-        for (int i = 0; i < columns; i++)
-        {
-            topVerts[i] = vertices[i];
-        }
-        if (roadGenerator != null)
-        {
-            roadGenerator.GenerateRoad(topVerts, columns);
-        }
+        GenerateRoadOverlay(vertices, columns);
 
         return heights[columns - 1];
     }
@@ -111,16 +86,14 @@ public class TerrainChunk : MonoBehaviour
         // Apply mesh data
         TerrainMeshGenerator.ApplyMeshData(mesh, vertices, uvs, triangles);
 
-        // Generate and apply collider
-        Vector2[] polyPath = TerrainMeshGenerator.GenerateColliderPath(vertices, columns);
-        if (poly != null)
-        {
-            poly.pathCount = 1;
-            poly.SetPath(0, polyPath);
-            poly.CreateMesh(false, false);
-        }
-
         // Generate road overlay
+        GenerateRoadOverlay(vertices, columns);
+
+        return heights[columns - 1];
+    }
+
+    private void GenerateRoadOverlay(Vector3[] vertices, int columns)
+    {
         Vector3[] topVerts = new Vector3[columns];
         for (int i = 0; i < columns; i++)
         {
@@ -130,8 +103,6 @@ public class TerrainChunk : MonoBehaviour
         {
             roadGenerator.GenerateRoad(topVerts, columns);
         }
-
-        return heights[columns - 1];
     }
 
     public float GetFirstTopHeight()

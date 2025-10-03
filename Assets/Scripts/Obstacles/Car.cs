@@ -173,8 +173,6 @@ public class Car : ObstacleBase
         float terrainHeight = GetTerrainHeightAtX(transform.position.x);
         float distanceToTerrain = Mathf.Abs(transform.position.y - terrainHeight);
         
-        // Debug logging to see what's happening
-        Debug.Log($"Car: Y={transform.position.y:F1}, Terrain={terrainHeight:F1}, Distance={distanceToTerrain:F1}, VelocityY={rb.linearVelocity.y:F1}");
         
         // Consider landed if very close to terrain and not moving much vertically
         if (distanceToTerrain < 0.5f && Mathf.Abs(rb.linearVelocity.y) < 0.5f)
@@ -192,7 +190,6 @@ public class Car : ObstacleBase
             // Stop vertical movement completely
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             
-            Debug.Log($"Car landed at Y={pos.y:F1}");
         }
     }
 }
