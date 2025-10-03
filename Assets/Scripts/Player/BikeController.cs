@@ -48,6 +48,7 @@ public class BikeController : MonoBehaviour
     [Tooltip("Duration of knockback effect")]
     public float knockbackDuration = 0.8f;
     
+    
 
     private Rigidbody2D rb;
     private PlayerController playerController;
@@ -67,77 +68,83 @@ public class BikeController : MonoBehaviour
     public float CurrentSignedSpeed => currentSpeed;
 
     void Start()
+{
+    rb = GetComponent<Rigidbody2D>();
+    rb.centerOfMass = new Vector2(0.12f, -0.18f);
+    rb.linearDamping = 0.05f;
+    rb.angularDamping = 3f;
+
+    playerController = GetComponent<PlayerController>();
+
+    if (frontWheelTransform) frontWheelRB = frontWheelTransform.GetComponent<Rigidbody2D>();
+    if (backWheelTransform) backWheelRB  = backWheelTransform.GetComponent<Rigidbody2D>();
+
+    if (backWheelJoint != null)
     {
-        rb = GetComponent<Rigidbody2D>();
-        rb.centerOfMass = new Vector2(0.12f, -0.18f);   
-        rb.linearDamping = 0.05f;                       
-        rb.angularDamping = 3f;                         
-
-        playerController = GetComponent<PlayerController>();
-
-        if (frontWheelTransform) frontWheelRB = frontWheelTransform.GetComponent<Rigidbody2D>();
-        if (backWheelTransform)  backWheelRB  = backWheelTransform.GetComponent<Rigidbody2D>();
-
-        if (backWheelJoint != null)
-        {
-            backMotor = backWheelJoint.motor;
-            backWheelJoint.useMotor = true;
-        }
-
-        currentSpeed = baseSpeed;
+        backMotor = backWheelJoint.motor;
+        backWheelJoint.useMotor = true;
     }
 
-    void Update()
+    currentSpeed = baseSpeed;
+    
+    // Initialize ground layer mask for terrain detection
+    if (groundLayerMask == 0)
     {
-        HandleKnockback();
-        HandleMovementInput();
-        CheckGrounded();
-        HandleJumpInput();
-        HandleRotationInput();
+        groundLayerMask = LayerMask.GetMask("Default");
+    }
+}
+
+void Update()
+{
+    HandleKnockback();
+    HandleMovementInput();
+    CheckGrounded();
+    HandleJumpInput();
+    HandleRotationInput();
+}
+
+void FixedUpdate()
+{
+    ApplyMotor();
+    ApplySlopeGravity();
+    ApplyAntiWheelie();
+}
+
+private void HandleMovementInput()
+{
+    bool isSlowingDown = playerController != null && playerController.slowDownAction != null
+                       ? playerController.slowDownAction.IsPressed()
+                       : false;
+
+    float effectiveMaxSpeed = instantBoost && IsBoosting() ? maxSpeed * boostMultiplier : maxSpeed;
+
+    if (playerController != null && playerController.moveAction != null)
+    {
+        Vector2 move = playerController.moveAction.ReadValue<Vector2>();
+        bool isMoving = Mathf.Abs(move.x) > 0.01f;
+        float desiredDir = isMoving ? Mathf.Sign(move.x) : 0f;
+
+        targetSpeed = isSlowingDown ? 0f : (isMoving ? desiredDir * effectiveMaxSpeed : 0f);
+
+        float rate;
+        if (isSlowingDown) rate = brakingRate;
+        else if (Mathf.Abs(targetSpeed) < 0.01f) rate = decelerationRate;
+        else if (Mathf.Sign(targetSpeed) != Mathf.Sign(currentSpeed) && Mathf.Abs(currentSpeed) > 0.01f) 
+            rate = brakingRate;
+        else 
+            rate = accelerationRate * (IsBoosting() ? boostAccelMultiplier : 1f);
+
+        currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, rate * Time.deltaTime);
     }
 
-    void FixedUpdate()
+    if (!IsBoosting() && Mathf.Abs(currentSpeed) > maxSpeed)
     {
-        ApplyMotor();
-        ApplySlopeGravity();
-        ApplyAntiWheelie();
+        float cap = Mathf.Sign(currentSpeed) * maxSpeed;
+        currentSpeed = Mathf.MoveTowards(currentSpeed, cap, overspeedBleedRate * Time.deltaTime);
     }
+}
 
-    private void HandleMovementInput()
-    {
-        bool isSlowingDown = playerController != null && playerController.slowDownAction != null
-                           ? playerController.slowDownAction.IsPressed()
-                           : false;
-
-        float effectiveMaxSpeed = instantBoost && IsBoosting() ? maxSpeed * boostMultiplier : maxSpeed;
-
-        if (playerController != null && playerController.moveAction != null)
-        {
-            Vector2 move = playerController.moveAction.ReadValue<Vector2>();
-            bool isMoving = Mathf.Abs(move.x) > 0.01f;
-            float desiredDir = isMoving ? Mathf.Sign(move.x) : 0f;
-
-            targetSpeed = isSlowingDown ? 0f : (isMoving ? desiredDir * effectiveMaxSpeed : 0f);
-
-            float rate;
-            if (isSlowingDown) rate = brakingRate;
-            else if (Mathf.Abs(targetSpeed) < 0.01f) rate = decelerationRate;
-            else if (Mathf.Sign(targetSpeed) != Mathf.Sign(currentSpeed) && Mathf.Abs(currentSpeed) > 0.01f) 
-                rate = brakingRate;
-            else 
-                rate = accelerationRate * (IsBoosting() ? boostAccelMultiplier : 1f);
-
-            currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, rate * Time.deltaTime);
-        }
-
-        if (!IsBoosting() && Mathf.Abs(currentSpeed) > maxSpeed)
-        {
-            float cap = Mathf.Sign(currentSpeed) * maxSpeed;
-            currentSpeed = Mathf.MoveTowards(currentSpeed, cap, overspeedBleedRate * Time.deltaTime);
-        }
-    }
-
-    private void ApplyMotor()
+private void ApplyMotor()
     {
         if (backWheelJoint == null || backWheelRB == null) return;
 
@@ -147,7 +154,7 @@ public class BikeController : MonoBehaviour
         backWheelJoint.motor = backMotor;
     }
 
-    private void ApplySlopeGravity()
+private void ApplySlopeGravity()
     {
         if (!(frontGrounded || backGrounded)) return;
 
@@ -161,7 +168,7 @@ public class BikeController : MonoBehaviour
         rb.AddForce(gParallel, ForceMode2D.Force);
     }
 
-    private void HandleJumpInput()
+private void HandleJumpInput()
     {
         if (playerController == null || playerController.jumpAction == null) return;
 
@@ -187,7 +194,7 @@ public class BikeController : MonoBehaviour
         }
     }
 
-    private void CheckGrounded()
+private void CheckGrounded()
     {
         frontGrounded = backGrounded = false;
         frontNormal = backNormal = null;
@@ -213,13 +220,13 @@ public class BikeController : MonoBehaviour
         }
     }
 
-    private void ApplyAntiWheelie()
+private void ApplyAntiWheelie()
     {
         if (backGrounded && !frontGrounded)
             rb.AddTorque(-antiWheelieStrength * Time.fixedDeltaTime, ForceMode2D.Force);
     }
     
-    public void ActivateBoost()
+public void ActivateBoost()
     {
         if (IsBoosting()) return;
         if (instantBoost) 
@@ -227,22 +234,22 @@ public class BikeController : MonoBehaviour
         StartCoroutine(BoostRoutine());
     }
 
-    private System.Collections.IEnumerator BoostRoutine()
+private System.Collections.IEnumerator BoostRoutine()
     {
         boosting = true;
         yield return new WaitForSeconds(boostDuration);
         boosting = false;
     }
 
-    private bool IsBoosting() => boosting;
+private bool IsBoosting() => boosting;
 
-    public void SetWheelFriction(float backDrag, float frontDrag)
+public void SetWheelFriction(float backDrag, float frontDrag)
     {
         if (backWheelRB) backWheelRB.linearDamping = backDrag;
         if (frontWheelRB) frontWheelRB.linearDamping = frontDrag;
     }
 
-    private void HandleRotationInput()
+private void HandleRotationInput()
     {
         // Allow rotation both in air and on ground
         // bool isInAir = !(frontGrounded || backGrounded);
@@ -262,17 +269,17 @@ public class BikeController : MonoBehaviour
         }
     }
 
-    void OnDrawGizmosSelected()
+void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         if (frontWheelTransform) Gizmos.DrawWireSphere(frontWheelTransform.position, groundCheckRadius);
         if (backWheelTransform) Gizmos.DrawWireSphere(backWheelTransform.position, groundCheckRadius);
     }
     
-    /// <summary>
-    /// Apply knockback effect when player gets hit
-    /// </summary>
-    public void ApplyKnockback()
+/// <summary>
+/// Apply knockback effect when player gets hit
+/// </summary>
+public void ApplyKnockback()
     {
         isKnockedBack = true;
         knockbackTimer = knockbackDuration;
@@ -288,10 +295,10 @@ public class BikeController : MonoBehaviour
         rb.AddTorque(torque);
     }
     
-    /// <summary>
-    /// Handle knockback timer and effects
-    /// </summary>
-    private void HandleKnockback()
+/// <summary>
+/// Handle knockback timer and effects
+/// </summary>
+private void HandleKnockback()
     {
         if (isKnockedBack)
         {
