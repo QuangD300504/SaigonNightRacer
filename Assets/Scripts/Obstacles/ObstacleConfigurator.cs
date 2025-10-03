@@ -33,7 +33,7 @@ public class ObstacleConfigurator : MonoBehaviour
         var car = obstacle.GetComponent<Car>();
         if (car != null)
         {
-            car.direction = Random.Range(0, 2) == 0 ? -1 : 1;
+            // Car automatically moves towards player - no configuration needed
         }
     }
     

@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: -401215873845798767, guid: 83a7bfcec3365954b9ccd709a3d54fbf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -187,7 +187,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6789785585852402041}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -222,9 +222,4 @@ MonoBehaviour:
   avoidPoints: 10
   impactVfxPrefab: {fileID: 0}
   carSpeed: 3
-  direction: 1
   activationDistance: 20
-  terrainOffset: 0.5
-  terrainLayerMask:
-    serializedVersion: 2
-    m_Bits: 72
