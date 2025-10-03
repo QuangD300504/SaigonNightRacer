@@ -12,6 +12,12 @@ public class RoadGenerator : MonoBehaviour
     [Tooltip("Layer for road colliders (should match BikeController groundLayerMask)")]
     public int roadLayer = 0; // Default layer
 
+    [Header("Rendering")]
+    [Tooltip("Sorting Layer name for the road renderer")] 
+    public string sortingLayerName = "Default";
+    [Tooltip("Sorting Order for the road renderer (higher draws on top)")]
+    public int sortingOrder = 10;
+
     private Mesh roadMesh;
     private GameObject roadObject;
     private EdgeCollider2D edgeCollider;
@@ -34,6 +40,9 @@ public class RoadGenerator : MonoBehaviour
             var mf = roadObject.AddComponent<MeshFilter>();
             var mr = roadObject.AddComponent<MeshRenderer>();
             mr.material = roadMaterial;
+            // Ensure the road renders above the terrain
+            mr.sortingLayerName = sortingLayerName;
+            mr.sortingOrder = sortingOrder;
 
             // EdgeCollider for center line only
             edgeCollider = roadObject.AddComponent<EdgeCollider2D>();
@@ -44,7 +53,16 @@ public class RoadGenerator : MonoBehaviour
         }
         else
         {
-            roadMesh = roadObject.GetComponent<MeshFilter>().sharedMesh;
+            var mf = roadObject.GetComponent<MeshFilter>();
+            var mr = roadObject.GetComponent<MeshRenderer>();
+            // Keep renderer settings in sync in case values changed in Inspector
+            if (mr != null)
+            {
+                if (roadMaterial != null) mr.material = roadMaterial;
+                mr.sortingLayerName = sortingLayerName;
+                mr.sortingOrder = sortingOrder;
+            }
+            roadMesh = mf.sharedMesh;
             edgeCollider = roadObject.GetComponent<EdgeCollider2D>();
         }
     }
