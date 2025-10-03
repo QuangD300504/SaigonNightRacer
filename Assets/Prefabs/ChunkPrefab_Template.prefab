@@ -108,9 +108,7 @@ MonoBehaviour:
   amplitude: 1.5
   frequency: 0.8
   bottomDepth: 8
-  seed: 0
   seamBlendPoints: 4
-  physicsMaterial: {fileID: 0}
 --- !u!114 &1397902726333687986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -127,3 +125,5 @@ MonoBehaviour:
   roadHeightOffset: 0.05
   roadThickness: 3
   roadLayer: 6
+  sortingLayerName: Default
+  sortingOrder: 1
