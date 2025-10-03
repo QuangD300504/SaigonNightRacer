@@ -18,7 +18,12 @@ public class GameManager : MonoBehaviour
     public Text speedText;
     public GameObject endScreen;
 
-    void Awake(){ Instance = this; }
+    void Awake(){ 
+        Instance = this; 
+        // Initialize health
+        lives = 3;
+        Debug.Log($"Game Started! Player Health: {lives}/3");
+    }
 
     void Update(){
         timer += Time.deltaTime;
@@ -32,6 +37,7 @@ public class GameManager : MonoBehaviour
         score += Mathf.FloorToInt(Time.deltaTime * 1f); // +1 per second approx
         if (scoreText) scoreText.text = score.ToString();
         if (speedText) speedText.text = Mathf.RoundToInt(worldSpeed * 10f) + " km/h";
+        
     }
 
     public void SetWorldSpeed(float s){
@@ -44,6 +50,9 @@ public class GameManager : MonoBehaviour
 
     public void PlayerHit(){
         lives--;
+        
+        // Log health to console
+        Debug.Log($"Player Hit! Health: {lives}/3");
         
         // Apply knockback to player
         var player = GameObject.FindGameObjectWithTag("Player");
@@ -58,16 +67,43 @@ public class GameManager : MonoBehaviour
         
         if (lives <= 0) 
         {
-            EndGame();
+            PlayerDied();
         }
         // Note: No respawn needed since player is static in scene
     }
-
-    void EndGame(){
-        // show end screen, save highscore
+    
+    /// <summary>
+    /// Debug method to reduce player health (Press H key)
+    /// </summary>
+    public void ReducePlayerHealth()
+    {
+        if (lives > 0)
+        {
+            lives--;
+            Debug.Log($"Debug: Health reduced! Health: {lives}/3");
+            
+            if (lives <= 0)
+            {
+                PlayerDied();
+            }
+        }
+        else
+        {
+            Debug.Log("Player is already dead!");
+        }
+    }
+    
+    /// <summary>
+    /// Called when player dies (health reaches 0)
+    /// </summary>
+    public void PlayerDied()
+    {
+        Debug.Log("Player Died! Game Over!");
+        // Show end screen, save highscore
         int best = PlayerPrefs.GetInt("HighScore",0);
         if (score > best) PlayerPrefs.SetInt("HighScore", score);
         if (endScreen != null) endScreen.SetActive(true);
         Time.timeScale = 0f;
     }
+
 }

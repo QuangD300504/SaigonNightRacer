@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public InputAction boostAction;
     public InputAction rotateLeftAction;
     public InputAction rotateRightAction;
+    public InputAction debugReduceHealthAction;
 
     Rigidbody2D rb;
     float currentSpeed;
@@ -35,6 +36,7 @@ public class PlayerController : MonoBehaviour
         boostAction.Enable();
         rotateLeftAction.Enable();
         rotateRightAction.Enable();
+        debugReduceHealthAction.Enable();
     }
 
     void OnDisable() {
@@ -44,6 +46,7 @@ public class PlayerController : MonoBehaviour
         boostAction.Disable();
         rotateLeftAction.Disable();
         rotateRightAction.Disable();
+        debugReduceHealthAction.Disable();
     }
 
     void Update() {
@@ -60,8 +63,16 @@ public class PlayerController : MonoBehaviour
             bikeController.ActivateBoost();
         }
         
-        // send currentSpeed to GameManager so spawner can use it (with terrain modifier)
+        // Get GameManager instance once
         var gm = GameManager.Instance;
+        
+        // debug reduce health (press H)
+        if (debugReduceHealthAction.WasPressedThisFrame())
+        {
+            if (gm != null) gm.ReducePlayerHealth();
+        }
+        
+        // send currentSpeed to GameManager so spawner can use it (with terrain modifier)
         if (gm != null) gm.SetWorldSpeed(currentSpeed * speedModifier);
     }
 
