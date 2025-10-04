@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     public Text scoreText;
     public Text speedText;
     public Button pauseButton;
+    
 
     // THAY ĐỔI: Đơn giản hóa các biến panel để khớp với Hierarchy
     [Header("Menu Panels & Prefabs")]
@@ -47,6 +48,7 @@ public class GameManager : MonoBehaviour
         // Gán sự kiện cho nút Pause
         if (pauseButton != null) pauseButton.onClick.AddListener(TogglePause);
 
+
         Time.timeScale = 1f;
     }
 
@@ -70,7 +72,7 @@ public class GameManager : MonoBehaviour
         // Dòng này bây giờ chỉ chặn logic game, không chặn input nữa
         if (isPaused) return;
 
-        // --- Logic spawn và tính điểm (giữ nguyên) ---
+        // --- Logic spawn và tính điểm ---
         timer += Time.deltaTime;
         if (timer >= timeBetweenSpawns)
         {
@@ -81,9 +83,13 @@ public class GameManager : MonoBehaviour
                 timer = 0;
             }
         }
+        
+        // Update speed display
+        if (speedText) speedText.text = Mathf.RoundToInt(worldSpeed * 10f) + " km/h";
+        
+        // Legacy score system (basic time-based)
         score += Mathf.FloorToInt(Time.deltaTime * 1f);
         if (scoreText) scoreText.text = score.ToString();
-        if (speedText) speedText.text = Mathf.RoundToInt(worldSpeed * 10f) + " km/h";
     }
 
     public void PlayerHit()
@@ -92,9 +98,20 @@ public class GameManager : MonoBehaviour
         Debug.Log($"Player Hit! Health: {lives}/3");
         if (lives <= 0)
         {
-            // Tạm thời vô hiệu hóa logic game over
-            Debug.Log("Player Died! Game Over logic is currently disabled.");
+            GameOver();
         }
+    }
+    
+    /// <summary>
+    /// Handle game over logic
+    /// </summary>
+    private void GameOver()
+    {
+        Debug.Log("Game Over!");
+        
+        // TODO: Add game over UI panel, restart button, etc.
+        // For now, just pause the game
+        PauseGame();
     }
 
     // ===== QUẢN LÝ PAUSE VÀ MENU =====

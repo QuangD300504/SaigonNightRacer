@@ -69,7 +69,7 @@ public class PlayerController : MonoBehaviour
         // debug reduce health (press H)
         if (debugReduceHealthAction.WasPressedThisFrame())
         {
-            //if (gm != null) gm.ReducePlayerHealth();
+            if (gm != null) gm.PlayerHit();
         }
         
         // send currentSpeed to GameManager so spawner can use it (with terrain modifier)
