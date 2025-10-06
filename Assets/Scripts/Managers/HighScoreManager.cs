@@ -1,7 +1,8 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 /// <summary>
 /// Manages high scores using PlayerPrefs
@@ -82,6 +83,16 @@ public class HighScoreManager : MonoBehaviour
         if (scoreBreakdownPanel != null)
         {
             scoreBreakdownPanel.SetActive(false);
+        }
+    }
+
+    void Update()
+    {
+        // Check if the Caps Lock key was pressed this frame
+        if (Keyboard.current != null && Keyboard.current.capsLockKey.wasPressedThisFrame)
+        {
+            // Call the reset score function
+            ResetAllHighScores();
         }
     }
 
