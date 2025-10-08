@@ -2,7 +2,7 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-using TMPro; // Thêm namespace cho TextMeshPro
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -13,8 +13,8 @@ public class GameManager : MonoBehaviour
     public int lives = 3;
 
     [Header("In-Game UI References")]
-    public TextMeshProUGUI scoreText; // Đổi sang TextMeshProUGUI nếu bạn dùng nó
-    public TextMeshProUGUI speedText; // Đổi sang TextMeshProUGUI nếu bạn dùng nó
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI speedText;
     public Button pauseButton;
     public TextMeshProUGUI highScoreText_InGame;
 
@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI highScoreText_GameOver;
     public GameObject settingsMenuPrefab;
 
-    // Trạng thái game
+    // Game state
     private bool isPaused = false;
     private bool isGameOver = false;
     private GameObject currentSettingsInstance;
@@ -39,19 +39,19 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Tắt tất cả các panel lúc bắt đầu
+        // Disable all panels at start
         if (pausePanel != null) pausePanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (endGameScreen != null) endGameScreen.SetActive(false);
 
         if (pauseButton != null) pauseButton.onClick.AddListener(TogglePause);
 
-        // Đảm bảo game chạy
+        // Ensure game runs
         Time.timeScale = 1f;
         isGameOver = false;
         isPaused = false;
 
-        // Lấy điểm cao nhất đã lưu và hiển thị
+        // Get and display high score
         currentHighScore = HighScoreManager.Instance.GetHighScore("Total");
         if (highScoreText_InGame != null)
         {
@@ -61,18 +61,18 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        // Luôn kiểm tra input để có thể resume hoặc đóng settings
+        // Always check input for resume or close settings
         HandleInput();
 
-        // Không chạy logic game nếu đã thua hoặc đang pause
+        // Don't run game logic if game over or paused
         if (isGameOver || isPaused) return;
 
-        // --- Cập nhật UI từ các Manager khác ---
-        // Lấy điểm hiện tại từ ScoreManager và hiển thị
+        // Update UI from other managers
+        // Get current score from ScoreManager and display
         int currentScore = ScoreManager.Instance.GetFinalScore();
         if (scoreText) scoreText.text = "SCORE: " + currentScore.ToString();
 
-        // Nếu điểm hiện tại vượt qua high score, cập nhật high score text theo điểm hiện tại
+        // If current score exceeds high score, update high score text
         if (currentScore > currentHighScore)
         {
             if (highScoreText_InGame != null)
@@ -81,7 +81,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Cập nhật tốc độ
+        // Update speed
         if (speedText) speedText.text = Mathf.RoundToInt(worldSpeed * 10f) + " km/h";
     }
 
@@ -89,7 +89,7 @@ public class GameManager : MonoBehaviour
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            if (isGameOver) return; // Không làm gì nếu đã thua
+            if (isGameOver) return; // Do nothing if game over
 
             if (settingsPanel.activeSelf)
             {
@@ -100,11 +100,29 @@ public class GameManager : MonoBehaviour
                 TogglePause();
             }
         }
+        
+        // Invincible mode toggle (I key)
+        if (Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame)
+        {
+            var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+            if (obstacleSpawner != null)
+            {
+                obstacleSpawner.ToggleInvincibleMode();
+            }
+        }
     }
 
     public void PlayerHit()
     {
-        if (isGameOver) return; // Không trừ mạng nữa nếu đã thua
+        if (isGameOver) return; // Don't reduce lives if already game over
+
+        // Check for invincible mode cheat
+        var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+        if (obstacleSpawner != null && obstacleSpawner.IsInvincibleModeEnabled())
+        {
+            Debug.Log("=== INVINCIBLE MODE: Player hit ignored ===");
+            return; // Skip damage if invincible mode is enabled
+        }
 
         lives--;
         Debug.Log($"Player Hit! Health: {lives}/3");
@@ -117,32 +135,32 @@ public class GameManager : MonoBehaviour
     // ===== GAME OVER =====
     private void EndGame()
     {
-        if (isGameOver) return; // Chỉ chạy 1 lần
+        if (isGameOver) return; // Only run once
         isGameOver = true;
 
         Time.timeScale = 0f;
 
-        // 1. Lấy điểm cuối cùng từ ScoreManager
+        // 1. Get final score from ScoreManager
         int finalScore = ScoreManager.Instance.GetFinalScore();
 
-        // 2. Gửi điểm cho HighScoreManager để kiểm tra và lưu
+        // 2. Send score to HighScoreManager to check and save
         HighScoreManager.Instance.CheckAndSaveHighScore(finalScore);
 
-        // 3. Lấy high score MỚI NHẤT (sau khi đã check) để hiển thị
+        // 3. Get latest high score (after check) to display
         int latestHighScore = HighScoreManager.Instance.GetHighScore("Total");
         if (highScoreText_GameOver != null)
         {
             highScoreText_GameOver.text = "HIGH SCORE: " + latestHighScore.ToString();
         }
 
-        // 4. Kích hoạt (enable) màn hình EndGameScreen
+        // 4. Enable EndGameScreen
         if (endGameScreen != null)
         {
             endGameScreen.SetActive(true);
         }
     }
 
-    // ===== QUẢN LÝ PAUSE VÀ MENU =====
+    // ===== PAUSE AND MENU MANAGEMENT =====
     public void TogglePause()
     {
         if (isPaused) ResumeGame();
@@ -196,7 +214,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ===== CÁC HÀM CHO NÚT BẤM (RETRY, QUIT) =====
+    // ===== BUTTON FUNCTIONS (RETRY, QUIT) =====
     public void RestartGame()
     {
         Time.timeScale = 1f;

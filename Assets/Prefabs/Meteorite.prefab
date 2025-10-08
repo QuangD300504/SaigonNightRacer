@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4
   m_Sprite: {fileID: -5964804713036057234, guid: 8cc957f6602fdda4bbc1c79278ebfd1d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -169,7 +169,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeteoriteObstacle
   damage: 3
-  avoidPoints: 15
   destroyDelay: 8
   fallSpeed: 5
+  enableSmartTargeting: 1
+  predictionTime: 1.5
+  maxTrackingSpeed: 3
+  trackingAccuracy: 0.3
+  enableDynamicRotation: 1
+  enableShadow: 1
+  shadowPrefab: {fileID: 1312031175861256371, guid: a81d1bcea030e4d4b9cb3aa88a9bb3b4, type: 3}
+  shadowOffset: 0.5
   impactVfxPrefab: {fileID: 0}

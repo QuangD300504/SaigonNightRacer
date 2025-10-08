@@ -13,8 +13,6 @@ public class ObstacleSelector : MonoBehaviour
     [Tooltip("Car prefab")]
     public GameObject carPrefab;
     
-    [Tooltip("Pedestrian prefab")]
-    public GameObject pedestrianPrefab;
     
     [Tooltip("Meteorite prefab")]
     public GameObject meteoritePrefab;
@@ -22,15 +20,12 @@ public class ObstacleSelector : MonoBehaviour
     [Header("Obstacle Probabilities")]
     [Tooltip("Probability of spawning traffic cone (0-1)")]
     [Range(0f, 1f)]
-    public float trafficConeChance = 0.4f;
+    public float trafficConeChance = 0.5f;
     
     [Tooltip("Probability of spawning car (0-1)")]
     [Range(0f, 1f)]
-    public float carChance = 0.2f;
+    public float carChance = 0.3f;
     
-    [Tooltip("Probability of spawning pedestrian (0-1)")]
-    [Range(0f, 1f)]
-    public float pedestrianChance = 0.2f;
     
     [Tooltip("Probability of spawning meteorite (0-1)")]
     [Range(0f, 1f)]
@@ -45,10 +40,9 @@ public class ObstacleSelector : MonoBehaviour
         float cumulative = 0f;
         
         // Normalize probabilities to ensure they add up to 1
-        float totalChance = trafficConeChance + carChance + pedestrianChance + meteoriteChance;
+        float totalChance = trafficConeChance + carChance + meteoriteChance;
         float normalizedTrafficCone = trafficConeChance / totalChance;
         float normalizedCar = carChance / totalChance;
-        float normalizedPedestrian = pedestrianChance / totalChance;
         float normalizedMeteorite = meteoriteChance / totalChance;
         
         cumulative += normalizedTrafficCone;
@@ -61,12 +55,6 @@ public class ObstacleSelector : MonoBehaviour
         if (random < cumulative)
         {
             return carPrefab;
-        }
-        
-        cumulative += normalizedPedestrian;
-        if (random < cumulative)
-        {
-            return pedestrianPrefab;
         }
         
         cumulative += normalizedMeteorite;

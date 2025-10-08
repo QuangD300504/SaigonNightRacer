@@ -20,7 +20,7 @@ public class Car : ObstacleBase
     [Tooltip("How far down the raycast should go")]
     public float groundCheckDistance = 50f;
 
-    [Tooltip("Hover offset above the road surface")]
+    [Tooltip("Offset above the road surface (0 = touching road)")]
     public float hoverOffset = 0.3f;
 
     [Tooltip("How quickly the car aligns to slopes")]
@@ -29,6 +29,7 @@ public class Car : ObstacleBase
     private Transform playerTransform;
     private bool isMoving = false;
     private bool hasLanded = false;
+    private Vector2 targetPosition; // Store player position when car spawns
     private Rigidbody2D rb;
 
     void Start()
@@ -40,7 +41,11 @@ public class Car : ObstacleBase
 
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
+        {
             playerTransform = player.transform;
+            // Store player position when car spawns - this is the only time we track it
+            targetPosition = playerTransform.position;
+        }
 
         // Add slight random speed variation
         carSpeed += Random.Range(-0.5f, 0.5f);
@@ -52,19 +57,22 @@ public class Car : ObstacleBase
 
         if (!isMoving)
         {
+            // Use current player position, not stored position
             float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-            bool playerIsAhead = playerTransform.position.x > transform.position.x;
 
             if (distanceToPlayer <= activationDistance)
             {
                 isMoving = true;
+                // Update target to current player position when activating
+                targetPosition = playerTransform.position;
             }
         }
 
         if (isMoving && rb.bodyType == RigidbodyType2D.Kinematic)
         {
-            // Horizontal movement
-            Vector2 newPos = rb.position + new Vector2(Mathf.Sign(playerTransform.position.x - transform.position.x) * carSpeed * Time.fixedDeltaTime, 0f);
+            // Move towards the stored target position (player position when car spawned)
+            Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
+            Vector2 newPos = rb.position + direction * carSpeed * Time.fixedDeltaTime;
 
             // Raycast down to snap to road
             Vector2 rayStart = new Vector2(newPos.x, transform.position.y + groundCheckHeight);

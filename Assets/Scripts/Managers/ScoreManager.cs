@@ -29,10 +29,10 @@ public class ScoreManager : MonoBehaviour
     public float survivalMultiplier = 5f;
     
     [Tooltip("Points per second airborne")]
-    public float airMultiplier = 50f;
+    public float airMultiplier = 20f;
     
     [Tooltip("Points for completing a full flip (360°)")]
-    public int flipBonus = 500;
+    public int flipBonus = 200;
 
     [Header("Animation")]
     [Tooltip("Animate score text when score changes")]
@@ -47,6 +47,22 @@ public class ScoreManager : MonoBehaviour
     [Header("Movement Tracking")]
     [Tooltip("Minimum speed to count as moving (units/second)")]
     public float movementThreshold = 0.5f;
+
+    [Header("Cheat Prevention")]
+    [Tooltip("Minimum forward speed to count as progress (units/second)")]
+    public float minimumForwardSpeed = 0.5f;
+    
+    [Tooltip("Maximum time without forward progress before score stops")]
+    public float maxIdleTime = 3.0f;
+    
+    [Tooltip("Minimum distance change to count as forward progress")]
+    public float minimumProgressDistance = 0.3f;
+    
+    [Tooltip("Enable comprehensive cheat detection")]
+    public bool enableCheatPrevention = true;
+    
+    [Tooltip("Show cheat detection warnings")]
+    public bool showCheatWarnings = false;
 
     [Header("Debug")]
     [Tooltip("Show detailed score breakdown in console")]
@@ -77,6 +93,15 @@ public class ScoreManager : MonoBehaviour
     private float lastX;
     private float lastMoveTime;
     private bool isMoving;
+    
+    // Cheat prevention variables
+    private float lastProgressTime;
+    private float lastProgressX;
+    private bool isMakingProgress;
+    private float idleStartTime;
+    private bool isIdle;
+    private int cheatAttempts;
+    private float lastCheatWarningTime;
 
     public static ScoreManager Instance { get; private set; }
 
@@ -120,10 +145,27 @@ public class ScoreManager : MonoBehaviour
         lastMoveTime = Time.time;
         isMoving = false;
         
+        // Initialize cheat prevention
+        lastProgressTime = Time.time;
+        lastProgressX = startX;
+        isMakingProgress = false;
+        idleStartTime = Time.time;
+        isIdle = false;
+        cheatAttempts = 0;
+        lastCheatWarningTime = 0f;
+        
         // Initialize ground layer mask
         if (frontWheelRB == null || backWheelRB == null)
         {
             Debug.LogWarning("ScoreManager: Front or back wheel Rigidbody2D not assigned!");
+        }
+        
+        if (enableCheatPrevention)
+        {
+            Debug.Log("=== CHEAT PREVENTION ENABLED ===");
+            Debug.Log($"Minimum Forward Speed: {minimumForwardSpeed} units/sec");
+            Debug.Log($"Max Idle Time: {maxIdleTime}s");
+            Debug.Log($"Min Progress Distance: {minimumProgressDistance} units");
         }
     }
 
@@ -132,6 +174,7 @@ public class ScoreManager : MonoBehaviour
         if (player == null) return;
 
         UpdateMovementTracking();
+        UpdateCheatPrevention();
         UpdateDistanceScore();
         UpdateSurvivalScore();
         UpdateAirTime();
@@ -143,6 +186,108 @@ public class ScoreManager : MonoBehaviour
         {
             ShowDebugInfo();
         }
+    }
+
+    /// <summary>
+    /// Comprehensive cheat prevention system
+    /// </summary>
+    private void UpdateCheatPrevention()
+    {
+        if (!enableCheatPrevention) return;
+        
+        float currentX = player.position.x;
+        float currentTime = Time.time;
+        Rigidbody2D playerRB = player.GetComponent<Rigidbody2D>();
+        
+        if (playerRB == null) return;
+        
+        float currentSpeed = playerRB.linearVelocity.x;
+        float distanceFromLastProgress = currentX - lastProgressX;
+        
+        // Check for forward progress
+        bool hasForwardProgress = distanceFromLastProgress >= minimumProgressDistance;
+        bool hasForwardSpeed = currentSpeed >= minimumForwardSpeed;
+        
+        // Update progress tracking
+        if (hasForwardProgress && hasForwardSpeed)
+        {
+            lastProgressTime = currentTime;
+            lastProgressX = currentX;
+            isMakingProgress = true;
+            isIdle = false;
+        }
+        else
+        {
+            // Check if player has been idle too long
+            float timeSinceProgress = currentTime - lastProgressTime;
+            
+            if (timeSinceProgress >= maxIdleTime)
+            {
+                if (!isIdle)
+                {
+                    isIdle = true;
+                    idleStartTime = currentTime;
+                    OnCheatDetected("IDLE_EXPLOIT", $"Player idle for {timeSinceProgress:F1}s");
+                }
+            }
+        }
+        
+        // Detect back-and-forth movement
+        if (Mathf.Abs(currentSpeed) > movementThreshold)
+        {
+            // Check for oscillating movement pattern
+            if (Mathf.Sign(currentSpeed) != Mathf.Sign(playerRB.linearVelocity.x))
+            {
+                OnCheatDetected("OSCILLATION", "Back-and-forth movement detected");
+            }
+        }
+        
+        // Detect reverse movement (only for significant backward movement)
+        if (currentSpeed < -2.0f) // Only detect significant backward movement
+        {
+            OnCheatDetected("REVERSE_MOVEMENT", $"Moving backwards at {currentSpeed:F1} units/sec");
+        }
+        
+        // Detect speed manipulation
+        if (Mathf.Abs(currentSpeed) > 20f) // Unrealistically high speed
+        {
+            OnCheatDetected("SPEED_HACK", $"Unrealistic speed: {currentSpeed:F1} units/sec");
+        }
+    }
+    
+    /// <summary>
+    /// Handle cheat detection and warnings
+    /// </summary>
+    private void OnCheatDetected(string cheatType, string details)
+    {
+        cheatAttempts++;
+        
+        // Rate limit warnings to avoid spam
+        if (Time.time - lastCheatWarningTime > 5f)
+        {
+            if (showCheatWarnings)
+            {
+                Debug.LogWarning($"🚨 CHEAT DETECTED: {cheatType} - {details}");
+                Debug.LogWarning($"Total cheat attempts: {cheatAttempts}");
+            }
+            lastCheatWarningTime = Time.time;
+        }
+        
+        // Log to console for debugging
+        if (showDebugInfo)
+        {
+            Debug.Log($"Cheat Detection: {cheatType} - {details}");
+        }
+    }
+    
+    /// <summary>
+    /// Check if player is making legitimate progress
+    /// </summary>
+    private bool IsMakingLegitimateProgress()
+    {
+        if (!enableCheatPrevention) return true;
+        
+        return isMakingProgress && !isIdle;
     }
 
     /// <summary>
@@ -180,14 +325,14 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Calculate survival time bonus (only when moving or airborne)
+    /// Calculate survival time bonus (only when making legitimate progress)
     /// </summary>
     private void UpdateSurvivalScore()
     {
-        // Only add survival points if player is actively doing something
-        bool activelyPlaying = isMoving || inAir || (Time.time - lastMoveTime < 1f); // 1 second grace period
+        // Only add survival points if player is making legitimate progress
+        bool legitimatelyPlaying = IsMakingLegitimateProgress() || inAir;
         
-        if (activelyPlaying)
+        if (legitimatelyPlaying)
         {
             survivalTime += Time.deltaTime;
         }
@@ -339,6 +484,37 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Get cheat detection statistics
+    /// </summary>
+    public CheatStats GetCheatStats()
+    {
+        return new CheatStats
+        {
+            cheatAttempts = cheatAttempts,
+            isIdle = isIdle,
+            isMakingProgress = isMakingProgress,
+            timeSinceLastProgress = Time.time - lastProgressTime,
+            distanceFromLastProgress = player != null ? player.position.x - lastProgressX : 0f
+        };
+    }
+    
+    /// <summary>
+    /// Check if player is currently idle (for external systems)
+    /// </summary>
+    public bool IsPlayerIdle()
+    {
+        return isIdle;
+    }
+    
+    /// <summary>
+    /// Check if player is making legitimate progress (for external systems)
+    /// </summary>
+    public bool IsPlayerMakingProgress()
+    {
+        return IsMakingLegitimateProgress();
+    }
+    
+    /// <summary>
     /// Reset score for new game
     /// </summary>
     public void ResetScore()
@@ -358,11 +534,22 @@ public class ScoreManager : MonoBehaviour
         lastMoveTime = Time.time;
         isMoving = false;
         
+        // Reset cheat prevention
+        lastProgressTime = Time.time;
+        lastProgressX = startX;
+        isMakingProgress = false;
+        idleStartTime = Time.time;
+        isIdle = false;
+        cheatAttempts = 0;
+        lastCheatWarningTime = 0f;
+        
         if (player != null)
         {
             startX = player.position.x;
             lastRotation = player.eulerAngles.z;
         }
+        
+        Debug.Log("=== SCORE RESET WITH CHEAT PREVENTION ===");
     }
 }
 
@@ -377,4 +564,17 @@ public struct ScoreBreakdown
     public int airtime;
     public int flips;
     public int total;
+}
+
+/// <summary>
+/// Data structure for cheat detection statistics
+/// </summary>
+[System.Serializable]
+public struct CheatStats
+{
+    public int cheatAttempts;
+    public bool isIdle;
+    public bool isMakingProgress;
+    public float timeSinceLastProgress;
+    public float distanceFromLastProgress;
 }
