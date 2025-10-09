@@ -33,6 +33,9 @@ public class ScoreManager : MonoBehaviour
     
     [Tooltip("Points for completing a full flip (360°)")]
     public int flipBonus = 200;
+    
+    [Tooltip("Points for collecting collectibles")]
+    public int collectibleBonus = 10;
 
     [Header("Animation")]
     [Tooltip("Animate score text when score changes")]
@@ -81,6 +84,7 @@ public class ScoreManager : MonoBehaviour
     private float distanceScore;
     private float survivalScore;
     private float airScore;
+    private float collectibleScore;
     
     // Animation variables
     private bool isAnimating = false;
@@ -394,7 +398,7 @@ public class ScoreManager : MonoBehaviour
     /// </summary>
     private void UpdateUI()
     {
-        totalScore = distanceScore + survivalScore + airScore + (flipCount * flipBonus);
+        totalScore = distanceScore + survivalScore + airScore + collectibleScore + (flipCount * flipBonus);
         
         if (scoreText != null)
         {
@@ -418,7 +422,7 @@ public class ScoreManager : MonoBehaviour
         if (Time.frameCount % 60 == 0) // Update every second
         {
             Debug.Log($"Score Breakdown - Distance: {distanceScore:F0}, Survival: {survivalScore:F0}, " +
-                     $"Air: {airScore:F0}, Flips: {flipCount}, Total: {totalScore:F0}");
+                     $"Air: {airScore:F0}, Collectibles: {collectibleScore:F0}, Flips: {flipCount}, Total: {totalScore:F0}");
         }
     }
 
@@ -461,6 +465,25 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Add score from collectibles
+    /// </summary>
+    public void AddScore(int value)
+    {
+        collectibleScore += value;
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"Collectible collected! +{value} points. Total collectible score: {collectibleScore}");
+        }
+        
+        // Trigger score animation for collectible pickups
+        if (animateScoreChanges)
+        {
+            StartScoreAnimation();
+        }
+    }
+    
+    /// <summary>
     /// Get final score for game over screen
     /// </summary>
     public int GetFinalScore()
@@ -478,6 +501,7 @@ public class ScoreManager : MonoBehaviour
             distance = Mathf.FloorToInt(distanceScore),
             survival = Mathf.FloorToInt(survivalScore),
             airtime = Mathf.FloorToInt(airScore),
+            collectibles = Mathf.FloorToInt(collectibleScore),
             flips = flipCount,
             total = Mathf.FloorToInt(totalScore)
         };
@@ -523,6 +547,7 @@ public class ScoreManager : MonoBehaviour
         distanceScore = 0f;
         survivalScore = 0f;
         airScore = 0f;
+        collectibleScore = 0f;
         survivalTime = 0f;
         flipCount = 0;
         airTimer = 0f;
@@ -562,6 +587,7 @@ public struct ScoreBreakdown
     public int distance;
     public int survival;
     public int airtime;
+    public int collectibles;
     public int flips;
     public int total;
 }

@@ -22,14 +22,14 @@ public class MeteoriteObstacle : MonoBehaviour
     public bool enableSmartTargeting = true;
     
     [Tooltip("How far ahead to aim (in seconds)")]
-    public float predictionTime = 1.0f;
+    public float predictionTime = 0.5f;
     
     [Tooltip("Maximum horizontal tracking speed")]
-    public float maxTrackingSpeed = 2f;
+    public float maxTrackingSpeed = 1f;
     
     [Tooltip("Tracking accuracy (0 = perfect, 1 = random)")]
     [Range(0f, 1f)]
-    public float trackingAccuracy = 0.3f;
+    public float trackingAccuracy = 0.2f;
     
     [Header("Visual Effects")]
     [Tooltip("Enable dynamic rotation based on movement direction")]
@@ -41,8 +41,8 @@ public class MeteoriteObstacle : MonoBehaviour
     [Tooltip("Shadow prefab to instantiate")]
     public GameObject shadowPrefab;
     
-    [Tooltip("Shadow offset below meteorite")]
-    public float shadowOffset = 0.5f;
+    [Tooltip("Layer mask for ground detection")]
+    public LayerMask groundMask = 64; // Ground layer (layer 6)
     
     [Header("Effects")]
     [Tooltip("VFX prefab to spawn on impact")]
@@ -60,7 +60,6 @@ public class MeteoriteObstacle : MonoBehaviour
     // Visual effect variables
     private GameObject shadowInstance;
     private SpriteRenderer spriteRenderer;
-    private Vector2 lastVelocity;
 
     void Awake()
     {
@@ -105,37 +104,26 @@ public class MeteoriteObstacle : MonoBehaviour
         {
             if (enableSmartTargeting && playerTransform != null)
             {
-                // Continuously update target position as player moves
-                CalculateSmartTarget();
-                
-                // Smart targeting: move towards predicted player position
-                Vector2 currentPos = transform.position;
-                Vector2 directionToTarget = (targetPosition - currentPos).normalized;
-                
-                // Calculate horizontal velocity towards target (subtle tracking)
-                float distanceToTarget = Mathf.Abs(targetPosition.x - currentPos.x);
-                float horizontalSpeed = Mathf.Min(maxTrackingSpeed * 0.3f, distanceToTarget / (predictionTime * 2f));
-                
-                // Limit direction changes to prevent dramatic turns
-                Vector2 desiredVelocity = new Vector2(directionToTarget.x * horizontalSpeed, -fallSpeed);
-                Vector2 currentVelocity = rb.linearVelocity;
-                
-                // Gradually adjust velocity instead of instant changes
-                float maxChange = maxTrackingSpeed * 0.1f * Time.deltaTime;
-                Vector2 velocityChange = desiredVelocity - currentVelocity;
-                velocityChange.x = Mathf.Clamp(velocityChange.x, -maxChange, maxChange);
-                
-                Vector2 horizontalVelocity = currentVelocity + velocityChange;
-                horizontalVelocity.y = -fallSpeed; // Always fall at constant speed
-                
-                // Add some randomness for tracking accuracy
-                if (trackingAccuracy > 0f)
+                // Calculate target once at spawn, then fall straight down
+                if (targetPosition == Vector2.zero)
                 {
-                    float randomOffset = Random.Range(-trackingAccuracy, trackingAccuracy) * maxTrackingSpeed;
-                    horizontalVelocity.x += randomOffset;
+                    CalculateSmartTarget();
                 }
                 
-                rb.linearVelocity = horizontalVelocity;
+                // Simple straight-line fall with minimal horizontal adjustment
+                Vector2 currentPos = transform.position;
+                float horizontalDistance = targetPosition.x - currentPos.x;
+                
+                // Very subtle horizontal movement - mostly straight down
+                float horizontalSpeed = Mathf.Clamp(horizontalDistance * 0.1f, -maxTrackingSpeed, maxTrackingSpeed);
+                
+                // Add small amount of randomness for natural look
+                if (trackingAccuracy > 0f)
+                {
+                    horizontalSpeed += Random.Range(-trackingAccuracy * 0.5f, trackingAccuracy * 0.5f);
+                }
+                
+                rb.linearVelocity = new Vector2(horizontalSpeed, -fallSpeed);
             }
             else
             {
@@ -254,8 +242,8 @@ public class MeteoriteObstacle : MonoBehaviour
         // This allows meteorites to track fast-moving players properly
         targetPosition = predictedPlayerPos;
         
-        // Only log occasionally to avoid spam
-        if (Random.Range(0f, 1f) < 0.1f) // 10% chance to log
+        // Only log occasionally to avoid spam (2% chance)
+        if (Random.value < 0.02f)
         {
             Debug.Log($"Meteorite targeting: Player at {playerPos}, Predicted at {predictedPlayerPos}, Time to impact: {timeToImpact:F2}s");
         }
@@ -268,8 +256,48 @@ public class MeteoriteObstacle : MonoBehaviour
     {
         if (shadowPrefab != null)
         {
-            shadowInstance = Instantiate(shadowPrefab, transform);
-            shadowInstance.transform.localPosition = new Vector3(0f, -shadowOffset, 0f);
+            // Create shadow as a separate object (not child of meteorite)
+            shadowInstance = Instantiate(shadowPrefab);
+            
+            // Position shadow on ground using raycast
+            UpdateShadowPosition();
+            
+            // Make shadow more oval-shaped and properly sized
+            shadowInstance.transform.localScale = new Vector3(1.2f, 0.8f, 1f); // Oval shape
+        }
+    }
+    
+    /// <summary>
+    /// Update shadow position on ground
+    /// </summary>
+    private void UpdateShadowPosition()
+    {
+        if (shadowInstance == null) return;
+        
+        // Raycast from meteorite position down to find ground
+        Vector2 rayStart = transform.position;
+        Vector2 rayDirection = Vector2.down;
+        float rayDistance = 20f; // Should be enough to reach ground
+        
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, rayDirection, rayDistance, groundMask);
+        
+        if (hit.collider != null)
+        {
+            // Position shadow on ground surface
+            Vector3 groundPosition = new Vector3(hit.point.x, hit.point.y + 0.1f, transform.position.z);
+            shadowInstance.transform.position = groundPosition;
+            
+            // Scale shadow based on height (closer to ground = larger shadow)
+            float height = transform.position.y - hit.point.y;
+            float shadowScale = Mathf.Lerp(1.0f, 0.6f, Mathf.Clamp01(height / 8f));
+            
+            // Maintain oval shape while scaling
+            shadowInstance.transform.localScale = new Vector3(1.2f * shadowScale, 0.8f * shadowScale, 1f);
+        }
+        else
+        {
+            // Fallback: position shadow below meteorite if no ground found
+            shadowInstance.transform.position = new Vector3(transform.position.x, transform.position.y - 2f, transform.position.z);
         }
     }
     
@@ -292,16 +320,10 @@ public class MeteoriteObstacle : MonoBehaviour
             }
         }
         
-        // Update shadow position
+        // Update shadow position on ground
         if (shadowInstance != null)
         {
-            // Keep shadow below meteorite
-            shadowInstance.transform.localPosition = new Vector3(0f, -shadowOffset, 0f);
-            
-            // Scale shadow based on height (closer to ground = larger shadow)
-            float height = transform.position.y;
-            float shadowScale = Mathf.Lerp(1.5f, 0.5f, Mathf.Clamp01(height / 10f));
-            shadowInstance.transform.localScale = Vector3.one * shadowScale;
+            UpdateShadowPosition();
         }
     }
     

@@ -63,6 +63,12 @@ public class BikeController : MonoBehaviour
     private bool boosting;
     private bool isKnockedBack = false;
     private float knockbackTimer = 0f;
+    
+    // Power-up states
+    private bool isShielded = false;
+    private bool isSpeedBoosted = false;
+    private float shieldTimer = 0f;
+    private float speedBoostTimer = 0f;
 
     public float CurrentSpeed => Mathf.Abs(currentSpeed);
     public float CurrentSignedSpeed => currentSpeed;
@@ -97,6 +103,7 @@ public class BikeController : MonoBehaviour
 void Update()
 {
     HandleKnockback();
+    HandlePowerUps();
     HandleMovementInput();
     CheckGrounded();
     HandleJumpInput();
@@ -295,9 +302,9 @@ public void ApplyKnockback()
         rb.AddTorque(torque);
     }
     
-/// <summary>
-/// Handle knockback timer and effects
-/// </summary>
+    /// <summary>
+    /// Handle knockback timer and effects
+    /// </summary>
 private void HandleKnockback()
     {
         if (isKnockedBack)
@@ -308,6 +315,86 @@ private void HandleKnockback()
             {
                 isKnockedBack = false;
                 knockbackTimer = 0f;
+            }
+        }
+    }
+    
+    // ===== POWER-UP METHODS =====
+    
+    /// <summary>
+    /// Activate shield power-up (temporary invincibility)
+    /// </summary>
+    public void ActivateShield(float duration)
+    {
+        if (isShielded) return; // Don't stack shields
+        
+        isShielded = true;
+        shieldTimer = duration;
+        
+        Debug.Log($"Shield activated for {duration} seconds!");
+        
+        // Optional: Add visual effect here
+        // You could spawn a shield particle effect or change the player's appearance
+    }
+    
+    /// <summary>
+    /// Activate speed boost power-up (temporary speed increase)
+    /// </summary>
+    public void ActivateSpeedBoost(float duration)
+    {
+        if (isSpeedBoosted) return; // Don't stack speed boosts
+        
+        isSpeedBoosted = true;
+        speedBoostTimer = duration;
+        
+        Debug.Log($"Speed boost activated for {duration} seconds!");
+        
+        // Optional: Add visual effect here
+        // You could add a speed trail or change the player's appearance
+    }
+    
+    /// <summary>
+    /// Check if player is currently shielded (for damage prevention)
+    /// </summary>
+    public bool IsShielded()
+    {
+        return isShielded;
+    }
+    
+    /// <summary>
+    /// Check if player is currently speed boosted
+    /// </summary>
+    public bool IsSpeedBoosted()
+    {
+        return isSpeedBoosted;
+    }
+    
+    /// <summary>
+    /// Handle power-up timers
+    /// </summary>
+    private void HandlePowerUps()
+    {
+        // Handle shield timer
+        if (isShielded)
+        {
+            shieldTimer -= Time.deltaTime;
+            if (shieldTimer <= 0f)
+            {
+                isShielded = false;
+                shieldTimer = 0f;
+                Debug.Log("Shield expired!");
+            }
+        }
+        
+        // Handle speed boost timer
+        if (isSpeedBoosted)
+        {
+            speedBoostTimer -= Time.deltaTime;
+            if (speedBoostTimer <= 0f)
+            {
+                isSpeedBoosted = false;
+                speedBoostTimer = 0f;
+                Debug.Log("Speed boost expired!");
             }
         }
     }

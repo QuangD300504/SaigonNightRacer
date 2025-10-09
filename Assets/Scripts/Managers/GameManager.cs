@@ -132,6 +132,27 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Restore player health (for health collectibles)
+    /// </summary>
+    public void RestoreHealth(int amount)
+    {
+        if (isGameOver) return; // Don't restore health if game is over
+        
+        int previousLives = lives;
+        lives = Mathf.Min(lives + amount, 3); // Cap at 3 lives
+        int actualRestore = lives - previousLives;
+        
+        if (actualRestore > 0)
+        {
+            Debug.Log($"Health restored! +{actualRestore} HP. Current: {lives}/3");
+        }
+        else
+        {
+            Debug.Log("Health already at maximum!");
+        }
+    }
+
     // ===== GAME OVER =====
     private void EndGame()
     {
