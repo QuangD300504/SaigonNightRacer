@@ -3,20 +3,32 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using TMPro;
+using UnityEngine.Events;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
     [Header("Game Logic")]
-    public float worldSpeed = 6f;
     public int lives = 3;
 
-    [Header("In-Game UI References")]
-    public TextMeshProUGUI scoreText;
-    public TextMeshProUGUI speedText;
+    [Header("Events")]
+    [Tooltip("Fired when score changes (currentScore, highScore)")]
+    public UnityEvent<int, int> OnScoreChanged;
+    
+    [Tooltip("Fired when lives change")]
+    public UnityEvent<int> OnLivesChanged;
+    
+    [Tooltip("Fired when speed changes")]
+    public UnityEvent<float> OnSpeedChanged;
+
+    [Header("HUD Controller")]
+    [Tooltip("HUD Controller for managing all UI elements")]
+    public HUDController hudController;
+
+    [Header("UI References")]
+    [Tooltip("Pause button for game control")]
     public Button pauseButton;
-    public TextMeshProUGUI highScoreText_InGame;
 
     [Header("Menu Panels & Prefabs")]
     public GameObject pausePanel;
@@ -30,11 +42,25 @@ public class GameManager : MonoBehaviour
     private bool isGameOver = false;
     private GameObject currentSettingsInstance;
     private int currentHighScore;
+    
+    // Score event tracking
+    private int lastScore = -1;
+    private int lastHighScore = -1;
+    private float lastSpeed = -1f;
+    
+    // Score update timer
+    private float scoreUpdateTimer = 0f;
+    private float scoreUpdateInterval = 0.1f; // Update every 0.1 seconds
 
     void Awake()
     {
         Instance = this;
-        lives = 3;
+        // Don't hardcode lives - use Inspector value
+        
+        // Initialize events if not set in Inspector
+        if (OnScoreChanged == null) OnScoreChanged = new UnityEvent<int, int>();
+        if (OnLivesChanged == null) OnLivesChanged = new UnityEvent<int>();
+        if (OnSpeedChanged == null) OnSpeedChanged = new UnityEvent<float>();
     }
 
     void Start()
@@ -53,10 +79,6 @@ public class GameManager : MonoBehaviour
 
         // Get and display high score
         currentHighScore = HighScoreManager.Instance.GetHighScore("Total");
-        if (highScoreText_InGame != null)
-        {
-            highScoreText_InGame.text = "HIGH SCORE: " + currentHighScore.ToString();
-        }
     }
 
     void Update()
@@ -67,22 +89,58 @@ public class GameManager : MonoBehaviour
         // Don't run game logic if game over or paused
         if (isGameOver || isPaused) return;
 
-        // Update UI from other managers
-        // Get current score from ScoreManager and display
-        int currentScore = ScoreManager.Instance.GetFinalScore();
-        if (scoreText) scoreText.text = "SCORE: " + currentScore.ToString();
-
-        // If current score exceeds high score, update high score text
-        if (currentScore > currentHighScore)
+        // Fire score events periodically (since ScoreManager updates continuously)
+        scoreUpdateTimer += Time.deltaTime;
+        if (scoreUpdateTimer >= scoreUpdateInterval)
         {
-            if (highScoreText_InGame != null)
+            UpdateScoreEvents();
+            scoreUpdateTimer = 0f;
+        }
+        UpdateSpeedEvents();
+    }
+
+    /// <summary>
+    /// Update score events when score changes
+    /// </summary>
+    private void UpdateScoreEvents()
+    {
+        if (ScoreManager.Instance != null)
+        {
+            int currentScore = ScoreManager.Instance.GetFinalScore();
+            int currentHighScore = HighScoreManager.Instance.GetHighScore("Total");
+            
+            // Fire event only when score increases by 5+ points or high score changes
+            if ((currentScore - lastScore) >= 5 || currentHighScore != lastHighScore)
             {
-                highScoreText_InGame.text = "HIGH SCORE: " + currentScore.ToString();
+                OnScoreChanged.Invoke(currentScore, currentHighScore);
+                lastScore = currentScore;
+                lastHighScore = currentHighScore;
             }
         }
+    }
 
-        // Update speed
-        if (speedText) speedText.text = Mathf.RoundToInt(worldSpeed * 10f) + " km/h";
+    /// <summary>
+    /// Update speed events when speed changes
+    /// </summary>
+    private void UpdateSpeedEvents()
+    {
+        // Get player speed from Rigidbody2D velocity (more reliable than BikeController calculation)
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            var rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                float currentSpeed = Mathf.Abs(rb.linearVelocity.x) * 3.6f; // Convert to km/h
+                
+                // Fire event only when speed changes significantly
+                if (Mathf.Abs(currentSpeed - lastSpeed) >= 0.1f)
+                {
+                    OnSpeedChanged.Invoke(currentSpeed);
+                    lastSpeed = currentSpeed;
+                }
+            }
+        }
     }
 
     private void HandleInput()
@@ -104,10 +162,16 @@ public class GameManager : MonoBehaviour
         // Invincible mode toggle (I key)
         if (Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame)
         {
+            Debug.Log("I key pressed - attempting to toggle invincible mode");
             var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
             if (obstacleSpawner != null)
             {
                 obstacleSpawner.ToggleInvincibleMode();
+                Debug.Log($"Invincible mode toggled. Current state: {obstacleSpawner.IsInvincibleModeEnabled()}");
+            }
+            else
+            {
+                Debug.LogWarning("ObstacleSpawnerNew not found!");
             }
         }
     }
@@ -124,8 +188,93 @@ public class GameManager : MonoBehaviour
             return; // Skip damage if invincible mode is enabled
         }
 
+        // Check for shield protection
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            var bikeController = player.GetComponent<BikeController>();
+            if (bikeController != null)
+            {
+                // Check for shield protection
+                if (bikeController.IsShielded())
+                {
+                    Debug.Log("=== SHIELD PROTECTION: Player hit blocked ===");
+                    return; // Skip damage if shield is active
+                }
+                
+                // Check for Mario-style invincibility
+                if (bikeController.IsInvincible())
+                {
+                    Debug.Log("=== INVINCIBILITY FRAMES: Player hit ignored ===");
+                    return; // Skip damage if invincible
+                }
+                
+                // Player takes damage - activate Mario-style invincibility
+                lives--;
+                Debug.Log($"Player Hit! Health: {lives} HP - Invincibility activated!");
+                
+                // Play damage sound
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayDeathSound();
+                }
+                
+                // Activate invincibility frames
+                bikeController.ActivateInvincibility();
+                
+                // Fire lives changed event
+                OnLivesChanged.Invoke(lives);
+                
+                if (lives <= 0)
+                {
+                    EndGame();
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Cheat method to directly reduce health, bypassing all protection
+    /// </summary>
+    public void CheatReduceHealth()
+    {
+        if (isGameOver) return; // Don't reduce lives if already game over
+        
+        // Directly reduce health without any protection checks
         lives--;
-        Debug.Log($"Player Hit! Health: {lives}/3");
+        Debug.Log($"CHEAT: Player health reduced! Health: {lives} HP");
+        
+        // Play damage sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayDeathSound();
+        }
+        
+        // Fire lives changed event
+        OnLivesChanged.Invoke(lives);
+        
+        if (lives <= 0)
+        {
+            EndGame();
+        }
+    }
+
+    /// <summary>
+    /// Debug method to set player health (for testing)
+    /// </summary>
+    public void SetPlayerHealth(int newHealth)
+    {
+        if (isGameOver) return; // Don't change health if game is over
+        
+        int previousLives = lives;
+        lives = Mathf.Clamp(newHealth, 0, int.MaxValue); // No upper cap - unlimited HP
+        
+        Debug.Log($"Debug: Player health changed from {previousLives} to {lives}");
+        
+        // Fire lives changed event
+        OnLivesChanged.Invoke(lives);
+        
+        // Check for game over
         if (lives <= 0)
         {
             EndGame();
@@ -140,12 +289,15 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return; // Don't restore health if game is over
         
         int previousLives = lives;
-        lives = Mathf.Min(lives + amount, 3); // Cap at 3 lives
+        lives = lives + amount; // No cap - unlimited HP
         int actualRestore = lives - previousLives;
         
         if (actualRestore > 0)
         {
-            Debug.Log($"Health restored! +{actualRestore} HP. Current: {lives}/3");
+            Debug.Log($"Health restored! +{actualRestore} HP. Current: {lives} HP");
+            
+            // Fire lives changed event
+            OnLivesChanged.Invoke(lives);
         }
         else
         {
@@ -158,6 +310,12 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return; // Only run once
         isGameOver = true;
+
+        // Play game over sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayGameOverSound();
+        }
 
         Time.timeScale = 0f;
 

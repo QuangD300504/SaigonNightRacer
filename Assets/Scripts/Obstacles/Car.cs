@@ -99,6 +99,14 @@ public class Car : ObstacleBase
         if (playerTransform != null && transform.position.x < playerTransform.position.x - 30f)
             Destroy(gameObject);
     }
+    
+    /// <summary>
+    /// Override to specify car collision sound
+    /// </summary>
+    protected override string GetObstacleType()
+    {
+        return "car";
+    }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -112,14 +120,16 @@ public class Car : ObstacleBase
         // Collision with player
         if (IsPlayerCollider(collision.collider))
         {
-            Rigidbody2D playerRb = collision.collider.attachedRigidbody;
-            if (playerRb != null)
+            // Check for invincible mode cheat first
+            var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+            if (obstacleSpawner != null && obstacleSpawner.IsInvincibleModeEnabled())
             {
-                // Push player backwards & upwards
-                Vector2 pushDir = new Vector2(Mathf.Sign(playerTransform.position.x - transform.position.x), 0.5f).normalized;
-                playerRb.AddForce(pushDir * 600f);
+                Debug.Log("=== INVINCIBLE MODE: Car collision ignored (no damage/effects) ===");
+                // Still destroy the car but skip damage and effects
+                Destroy(gameObject);
+                return;
             }
-
+            
             HandlePlayerCollision();
         }
     }

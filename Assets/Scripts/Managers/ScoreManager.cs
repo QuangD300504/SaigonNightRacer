@@ -18,8 +18,7 @@ public class ScoreManager : MonoBehaviour
     [Tooltip("Back wheel Rigidbody2D for ground detection")]
     public Rigidbody2D backWheelRB;
     
-    [Tooltip("UI Text component to display score")]
-    public TextMeshProUGUI scoreText;
+    // UI Text removed - now handled by HUDController
     
     [Header("Scoring Values")]
     [Tooltip("Points per unit distance traveled")]
@@ -31,21 +30,14 @@ public class ScoreManager : MonoBehaviour
     [Tooltip("Points per second airborne")]
     public float airMultiplier = 20f;
     
+    [Tooltip("Minimum distance required for airtime score (prevents infinite jump exploit)")]
+    public float minJumpDistance = 5f;
+    
     [Tooltip("Points for completing a full flip (360°)")]
     public int flipBonus = 200;
     
     [Tooltip("Points for collecting collectibles")]
     public int collectibleBonus = 10;
-
-    [Header("Animation")]
-    [Tooltip("Animate score text when score changes")]
-    public bool animateScoreChanges = true;
-    
-    [Tooltip("Animation duration in seconds")]
-    public float animationDuration = 0.3f;
-    
-    [Tooltip("Scale multiplier for animation")]
-    public float scaleMultiplier = 1.2f;
 
     [Header("Movement Tracking")]
     [Tooltip("Minimum speed to count as moving (units/second)")]
@@ -75,6 +67,7 @@ public class ScoreManager : MonoBehaviour
     private float startX;
     private float totalScore;
     private float airTimer;
+    private float airStartPosition; // Track where the jump started
     private bool inAir;
     private float lastRotation;
     private float survivalTime;
@@ -87,10 +80,7 @@ public class ScoreManager : MonoBehaviour
     private float collectibleScore;
     
     // Animation variables
-    private bool isAnimating = false;
-    private float animationTimer = 0f;
-    private Vector3 originalScale;
-    private float lastDisplayedScore = 0f;
+    // Animation fields removed - now handled by HUDController
     
     // Movement tracking variables
     private float maxDistanceX;
@@ -137,11 +127,7 @@ public class ScoreManager : MonoBehaviour
             lastRotation = player.eulerAngles.z;
         }
         
-        // Store original scale for animation
-        if (scoreText != null)
-        {
-            originalScale = scoreText.transform.localScale;
-        }
+        // Animation initialization removed - now handled by HUDController
         
         // Initialize movement tracking
         maxDistanceX = startX;
@@ -184,7 +170,6 @@ public class ScoreManager : MonoBehaviour
         UpdateAirTime();
         CheckFlips();
         UpdateUI();
-        HandleAnimation();
         
         if (showDebugInfo)
         {
@@ -362,13 +347,29 @@ public class ScoreManager : MonoBehaviour
             {
                 inAir = true;
                 airTimer = 0f;
+                airStartPosition = player.position.x; // Record jump start position
             }
             airTimer += Time.deltaTime;
         }
         else if (inAir)
         {
-            // Just landed - award air time bonus
-            airScore += airTimer * airMultiplier;
+            // Just landed - check if player traveled enough distance
+            float jumpDistance = player.position.x - airStartPosition;
+            
+            if (jumpDistance >= minJumpDistance)
+            {
+                // Award air time bonus only if player moved forward significantly
+                airScore += airTimer * airMultiplier;
+            }
+            else
+            {
+                // Debug: Show when airtime score is denied
+                if (showDebugInfo)
+                {
+                    Debug.Log($"Airtime score denied: Jump distance {jumpDistance:F1} < required {minJumpDistance:F1}");
+                }
+            }
+            // Reset air tracking regardless of distance (prevents infinite accumulation)
             inAir = false;
             airTimer = 0f;
         }
@@ -394,24 +395,11 @@ public class ScoreManager : MonoBehaviour
 
 
     /// <summary>
-    /// Update total score and UI display
+    /// Update total score (UI updates now handled by HUDController)
     /// </summary>
     private void UpdateUI()
     {
         totalScore = distanceScore + survivalScore + airScore + collectibleScore + (flipCount * flipBonus);
-        
-        if (scoreText != null)
-        {
-            int currentScore = Mathf.FloorToInt(totalScore);
-            scoreText.text = "SCORE: " + currentScore.ToString();
-            
-            // Trigger animation if score changed significantly
-            if (animateScoreChanges && Mathf.Abs(currentScore - lastDisplayedScore) >= 10f)
-            {
-                StartScoreAnimation();
-                lastDisplayedScore = currentScore;
-            }
-        }
     }
 
     /// <summary>
@@ -427,44 +415,6 @@ public class ScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Handle score text animation
-    /// </summary>
-    private void HandleAnimation()
-    {
-        if (!animateScoreChanges || !isAnimating || scoreText == null) return;
-
-        animationTimer += Time.deltaTime;
-        float progress = animationTimer / animationDuration;
-
-        if (progress < 1f)
-        {
-            // Animate scale up then down
-            float scale = Mathf.Lerp(originalScale.x, originalScale.x * scaleMultiplier, 
-                Mathf.Sin(progress * Mathf.PI));
-            scoreText.transform.localScale = Vector3.one * scale;
-        }
-        else
-        {
-            // Reset scale
-            scoreText.transform.localScale = originalScale;
-            isAnimating = false;
-            animationTimer = 0f;
-        }
-    }
-
-    /// <summary>
-    /// Start score animation
-    /// </summary>
-    public void StartScoreAnimation()
-    {
-        if (animateScoreChanges && scoreText != null)
-        {
-            isAnimating = true;
-            animationTimer = 0f;
-        }
-    }
-
-    /// <summary>
     /// Add score from collectibles
     /// </summary>
     public void AddScore(int value)
@@ -474,12 +424,6 @@ public class ScoreManager : MonoBehaviour
         if (showDebugInfo)
         {
             Debug.Log($"Collectible collected! +{value} points. Total collectible score: {collectibleScore}");
-        }
-        
-        // Trigger score animation for collectible pickups
-        if (animateScoreChanges)
-        {
-            StartScoreAnimation();
         }
     }
     

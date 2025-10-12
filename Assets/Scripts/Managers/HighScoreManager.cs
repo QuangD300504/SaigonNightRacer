@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class HighScoreManager : MonoBehaviour
 {
     [Header("UI References")]
-    [Tooltip("Text component to display high score")]
+    [Tooltip("Text component to display high score (for main menu)")]
     public TextMeshProUGUI highScoreText;
     
     [Tooltip("Text component to display 'New Record!' message")]
@@ -71,6 +71,7 @@ public class HighScoreManager : MonoBehaviour
 
     void Start()
     {
+        // Update high score display for main menu
         UpdateHighScoreDisplay();
         
         // Hide new record text initially
@@ -128,7 +129,7 @@ public class HighScoreManager : MonoBehaviour
         if (isNewRecord)
         {
             ShowNewRecordMessage();
-            UpdateHighScoreDisplay();
+            UpdateHighScoreDisplay(); // Update main menu display
         }
         
         return isNewRecord;
@@ -172,7 +173,7 @@ public class HighScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Update UI display with current high score
+    /// Update UI display with current high score (for main menu)
     /// </summary>
     public void UpdateHighScoreDisplay()
     {
@@ -256,7 +257,7 @@ public class HighScoreManager : MonoBehaviour
         PlayerPrefs.DeleteKey(scoreKeyPrefix + "Last_Total");
         
         PlayerPrefs.Save();
-        UpdateHighScoreDisplay();
+        UpdateHighScoreDisplay(); // Update main menu display
         
         Debug.Log("All high scores have been reset!");
     }

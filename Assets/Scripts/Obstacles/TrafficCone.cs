@@ -1,19 +1,20 @@
 using UnityEngine;
 
 /// <summary>
-/// Traffic cone obstacle - completely static obstacle
+/// Traffic cone obstacle - static obstacle with immediate collision response
 /// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class TrafficCone : ObstacleBase
 {
+    private bool hasHitPlayer = false;
     
     void Start()
     {
-        // Ensure collider is set as trigger for player detection
+        // Ensure collider is NOT a trigger for immediate collision detection
         var collider = GetComponent<Collider2D>();
         if (collider != null)
         {
-            collider.isTrigger = true;
+            collider.isTrigger = false; // Changed to false for immediate collision
         }
         
         // Remove any Rigidbody2D that might exist
@@ -24,38 +25,53 @@ public class TrafficCone : ObstacleBase
         }
     }
     
-    // Handle player detection
-    private void OnTriggerEnter2D(Collider2D other)
+    // Handle immediate collision with player (like car)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (IsPlayerCollider(other))
+        if (hasHitPlayer) return;
+        
+        if (IsPlayerCollider(collision.collider))
         {
-            // Add visual effect before destroying
-            StartCoroutine(DestroyWithEffect());
+            hasHitPlayer = true;
+            
+            // Check for invincible mode cheat first
+            var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+            if (obstacleSpawner != null && obstacleSpawner.IsInvincibleModeEnabled())
+            {
+                Debug.Log("=== INVINCIBLE MODE: Traffic cone collision ignored (no damage/effects) ===");
+                // Still destroy the cone but skip damage and effects
+                Destroy(gameObject);
+                return;
+            }
+            
+            // Add visual feedback
+            StartCoroutine(FlashEffect());
+            
+            // Handle collision (damage, destroy)
+            HandlePlayerCollision();
         }
     }
     
     /// <summary>
-    /// Destroy the cone with a visual effect
+    /// Override to specify traffic cone collision sound
     /// </summary>
-    private System.Collections.IEnumerator DestroyWithEffect()
+    protected override string GetObstacleType()
     {
-        // Disable collider to prevent multiple hits
-        var collider = GetComponent<Collider2D>();
-        if (collider != null) collider.enabled = false;
-        
-        // Add some visual feedback
+        return "cone";
+    }
+    
+    /// <summary>
+    /// Quick flash effect before destroying
+    /// </summary>
+    private System.Collections.IEnumerator FlashEffect()
+    {
         var spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
         {
-            // Flash effect
             Color originalColor = spriteRenderer.color;
             spriteRenderer.color = Color.red;
             yield return new WaitForSeconds(0.1f);
             spriteRenderer.color = originalColor;
-            yield return new WaitForSeconds(0.1f);
         }
-        
-        // Handle collision (damage, knockback, destroy)
-        HandlePlayerCollision();
     }
 }

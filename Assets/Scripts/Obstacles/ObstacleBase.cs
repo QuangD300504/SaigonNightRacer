@@ -21,6 +21,19 @@ public abstract class ObstacleBase : MonoBehaviour
     /// </summary>
     protected void HandlePlayerCollision()
     {
+        // Check for invincible mode cheat first
+        var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+        if (obstacleSpawner != null && obstacleSpawner.IsInvincibleModeEnabled())
+        {
+            Debug.Log("=== INVINCIBLE MODE: Player collision ignored (no damage/effects) ===");
+            // Still destroy the obstacle but skip damage and effects
+            Destroy(gameObject);
+            return;
+        }
+        
+        // Play collision sound based on obstacle type
+        PlayCollisionSound();
+        
         // Apply damage and knockback through GameManager
         var gameManager = GameManager.Instance;
         if (gameManager != null)
@@ -36,6 +49,28 @@ public abstract class ObstacleBase : MonoBehaviour
         
         // Destroy the obstacle
         Destroy(gameObject);
+    }
+    
+    /// <summary>
+    /// Play collision sound based on obstacle type
+    /// </summary>
+    protected virtual void PlayCollisionSound()
+    {
+        if (AudioManager.Instance != null)
+        {
+            // Get obstacle type from class name
+            string obstacleType = GetObstacleType();
+            AudioManager.Instance.PlayCollisionSound(obstacleType);
+        }
+    }
+    
+    /// <summary>
+    /// Get obstacle type string for sound selection
+    /// Override in derived classes for specific sounds
+    /// </summary>
+    protected virtual string GetObstacleType()
+    {
+        return gameObject.name.ToLower();
     }
     
     /// <summary>

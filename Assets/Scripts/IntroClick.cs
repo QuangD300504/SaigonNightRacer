@@ -4,9 +4,6 @@ using UnityEngine.InputSystem;
 
 public class IntroClick : MonoBehaviour
 {
-    //[SerializeField]
-    //private string nextSceneName = "MainMenu";
-
     [SerializeField]
     private float minDelaySeconds = 0.5f;
 

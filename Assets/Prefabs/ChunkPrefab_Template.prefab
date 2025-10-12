@@ -105,8 +105,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TerrainChunk
   pointsPerChunk: 50
   xSpacing: 0.5
-  amplitude: 1.5
-  frequency: 0.8
+  amplitude: 5
+  frequency: 0.3
   bottomDepth: 8
   seamBlendPoints: 4
 --- !u!114 &1397902726333687986

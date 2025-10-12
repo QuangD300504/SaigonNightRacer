@@ -49,20 +49,26 @@ public class ProgressiveDifficultyManager : MonoBehaviour
     public float obstacleSpawnIntervalDecreaseRate = 0.998f;
 
     [Header("Collectible Difficulty")]
-    [Tooltip("Base collectible spawn chance (early game)")]
-    [Range(0f, 1f)]
-    public float baseCollectibleChance = 0.25f;
-    
-    [Tooltip("Minimum collectible spawn chance (late game)")]
-    [Range(0f, 1f)]
-    public float minCollectibleChance = 0.05f;
-    
-    [Tooltip("Rare collectible spawn chance multiplier")]
-    [Range(0f, 1f)]
-    public float rareCollectibleChance = 0.1f;
-    
     [Tooltip("Score multiplier increase per difficulty phase")]
     public float scoreMultiplierIncrease = 0.1f;
+    
+    [Header("Obstacle Scaling")]
+    [Tooltip("Scale multiplier increase per difficulty phase")]
+    public float scaleMultiplierIncrease = 0.1f;
+    
+    [Header("Player Boost Difficulty")]
+    [Tooltip("Boost multiplier increase per difficulty phase")]
+    public float boostMultiplierIncrease = 0.1f;
+    
+    [Tooltip("Boost duration increase per difficulty phase (smaller than power)")]
+    public float boostDurationIncrease = 0.05f;
+    
+    [Tooltip("Boost cooldown increase per difficulty phase")]
+    public float boostCooldownIncrease = 0.2f;
+    
+    [Header("Player Speed Difficulty")]
+    [Tooltip("Player max speed increase per difficulty phase")]
+    public float playerSpeedIncrease = 0.1f;
 
     [Header("References")]
     [Tooltip("Player transform for distance calculation")]
@@ -146,6 +152,11 @@ public class ProgressiveDifficultyManager : MonoBehaviour
         string progressionType = useScoreBasedDifficulty ? "Score" : "Distance";
         ObstacleProbabilities probabilities = GetObstacleProbabilities();
         
+        // Get collectible weights
+        var (gemWeight, diamondWeight) = GetPointsCollectibleWeights();
+        var (healthWeight, shieldWeight, speedWeight) = GetBuffsCollectibleWeights();
+        var (pointsInterval, buffsInterval) = GetCollectibleSpawnIntervals();
+        
         // Create a single, colorful log message
         string phaseInfo = $"<color=#FFD700>=== DIFFICULTY PHASE {currentDifficultyPhase} ===</color>\n" +
                           $"<color=#00FF00>{progressionType}: {progressionValue:F0}</color> | " +
@@ -156,12 +167,27 @@ public class ProgressiveDifficultyManager : MonoBehaviour
                           $"<color=#87CEEB>Car:{probabilities.carChance:P0}</color> " +
                           $"<color=#FF4500>Meteor:{probabilities.meteoriteChance:P0}</color>\n" +
                           $"<color=#DA70D6>Collectibles:</color> " +
-                          $"<color=#32CD32>Common:{GetCollectibleSpawnChance():F2}</color> " +
-                          $"<color=#FF69B4>Rare:{GetRareCollectibleChance():F2}</color> | " +
                           $"<color=#FFD700>Score: {GetScoreMultiplier():F1}x</color> | " +
+                          $"<color=#FF69B4>Buff Duration: {GetBuffDurationMultiplier():F1}x</color> | " +
+                          $"<color=#FFA500>Scale: {GetObstacleScaleMultiplier():F1}x</color>\n" +
+                          $"<color=#FF6B6B>Boost:</color> " +
+                          $"<color=#FFD700>Power: {GetBoostMultiplier():F1}x</color> | " +
+                          $"<color=#FF69B4>Duration: {GetBoostDuration():F1}s</color> | " +
+                          $"<color=#FFA500>Cooldown: {GetBoostCooldown():F1}s</color>\n" +
+                          $"<color=#00FF00>Player:</color> " +
+                          $"<color=#87CEEB>Speed: {GetPlayerSpeedMultiplier():F1}x</color>\n" +
+                          $"<color=#FFFF00>Points:</color> " +
+                          $"<color=#FFD700>Gem:{gemWeight:F0}%</color> " +
+                          $"<color=#00FFFF>Diamond:{diamondWeight:F0}%</color> " +
+                          $"<color=#FFA500>Interval:{pointsInterval:F1}s</color>\n" +
+                          $"<color=#FF69B4>Buffs:</color> " +
+                          $"<color=#00FF00>Health:{healthWeight:F0}%</color> " +
+                          $"<color=#0080FF>Shield:{shieldWeight:F0}%</color> " +
+                          $"<color=#FF0000>Speed:{speedWeight:F0}%</color> " +
+                          $"<color=#FFA500>Interval:{buffsInterval:F1}s</color>\n" +
                           $"<color=#87CEEB>{GetPhaseDescription()}</color>";
         
-        Debug.Log(phaseInfo); // Enhanced phase log with collectible spawn chances
+        Debug.Log(phaseInfo); // Enhanced phase log with detailed collectible info
     }
 
     // ===== PUBLIC API METHODS =====
@@ -252,32 +278,6 @@ public class ProgressiveDifficultyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Get collectible spawn chance based on difficulty
-    /// </summary>
-    public float GetCollectibleSpawnChance()
-    {
-        // Reduce spawn chance as difficulty rises (makes survival harder)
-        return Mathf.Lerp(baseCollectibleChance, minCollectibleChance, currentDifficulty);
-    }
-
-    /// <summary>
-    /// Get rare collectible spawn chance based on difficulty
-    /// </summary>
-    public float GetRareCollectibleChance()
-    {
-        // Rare collectibles become more common as difficulty rises
-        return Mathf.Lerp(rareCollectibleChance * 0.5f, rareCollectibleChance, currentDifficulty);
-    }
-
-    /// <summary>
-    /// Check if a collectible should spawn
-    /// </summary>
-    public bool ShouldSpawnCollectible()
-    {
-        return Random.value <= GetCollectibleSpawnChance();
-    }
-
-    /// <summary>
     /// Get score multiplier for collectibles
     /// </summary>
     public float GetScoreMultiplier()
@@ -286,24 +286,193 @@ public class ProgressiveDifficultyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Get collectible prefab based on difficulty and rarity
+    /// Get obstacle scale multiplier based on difficulty phase
     /// </summary>
-    public GameObject GetCollectiblePrefab(GameObject[] commonPrefabs, GameObject[] rarePrefabs)
+    public float GetObstacleScaleMultiplier()
     {
-        if (commonPrefabs == null || commonPrefabs.Length == 0) return null;
+        return 1f + (currentDifficultyPhase * scaleMultiplierIncrease);
+    }
 
-        // Calculate rare spawn chance based on difficulty
-        float rareChance = rareCollectibleChance * currentDifficulty;
-        bool spawnRare = Random.value < rareChance;
+    /// <summary>
+    /// Get boost multiplier based on difficulty phase (higher difficulty = stronger boost)
+    /// </summary>
+    public float GetBoostMultiplier()
+    {
+        return 1f + (currentDifficultyPhase * boostMultiplierIncrease);
+    }
 
-        // Try to spawn rare collectible
-        if (spawnRare && rarePrefabs != null && rarePrefabs.Length > 0)
+    /// <summary>
+    /// Get boost duration based on difficulty phase (higher difficulty = longer boost)
+    /// </summary>
+    public float GetBoostDuration()
+    {
+        return 1f + (currentDifficultyPhase * boostDurationIncrease);
+    }
+
+    /// <summary>
+    /// Get boost cooldown based on difficulty phase (higher difficulty = longer cooldown)
+    /// </summary>
+    public float GetBoostCooldown()
+    {
+        return 2f + (currentDifficultyPhase * boostCooldownIncrease);
+    }
+
+    /// <summary>
+    /// Get player max speed multiplier based on difficulty phase (higher difficulty = faster player)
+    /// </summary>
+    public float GetPlayerSpeedMultiplier()
+    {
+        return 1f + (currentDifficultyPhase * playerSpeedIncrease);
+    }
+
+    /// <summary>
+    /// Get difficulty-adjusted spawn weights for points collectibles
+    /// Higher difficulty = more valuable collectibles (diamonds over gems)
+    /// </summary>
+    public (float gemWeight, float diamondWeight) GetPointsCollectibleWeights()
+    {
+        // Base weights
+        float gemWeight = 70f;
+        float diamondWeight = 30f;
+        
+        // Adjust based on difficulty phase
+        // Higher difficulty = more diamonds (more valuable)
+        float difficultyAdjustment = currentDifficultyPhase * 0.1f; // 10% shift per phase
+        gemWeight = Mathf.Max(40f, gemWeight - (difficultyAdjustment * 100f));
+        diamondWeight = Mathf.Min(60f, diamondWeight + (difficultyAdjustment * 100f));
+        
+        return (gemWeight, diamondWeight);
+    }
+
+    /// <summary>
+    /// Get difficulty-adjusted spawn weights for buff collectibles
+    /// Higher difficulty = more defensive buffs (shield over speed boost)
+    /// </summary>
+    public (float healthWeight, float shieldWeight, float speedWeight) GetBuffsCollectibleWeights()
+    {
+        // Base weights
+        float healthWeight = 45f;
+        float shieldWeight = 35f;
+        float speedWeight = 20f;
+        
+        // Adjust based on difficulty phase
+        // Higher difficulty = more shield (defensive), less speed (offensive)
+        float difficultyAdjustment = currentDifficultyPhase * 0.05f; // 5% shift per phase
+        
+        // Shield becomes more important in harder phases
+        shieldWeight = Mathf.Min(50f, shieldWeight + (difficultyAdjustment * 100f));
+        
+        // Speed boost becomes less important in harder phases
+        speedWeight = Mathf.Max(10f, speedWeight - (difficultyAdjustment * 50f));
+        
+        // Health stays relatively stable
+        healthWeight = 100f - shieldWeight - speedWeight;
+        
+        return (healthWeight, shieldWeight, speedWeight);
+    }
+
+    /// <summary>
+    /// Get difficulty-adjusted buff duration multiplier
+    /// Higher difficulty = longer buffs (more helpful)
+    /// </summary>
+    public float GetBuffDurationMultiplier()
+    {
+        // Base duration multiplier
+        float baseMultiplier = 1f;
+        
+        // Increase duration for each difficulty phase (more conservative)
+        float durationIncrease = currentDifficultyPhase * 0.1f; // 10% increase per phase (was 20%)
+        
+        return baseMultiplier + durationIncrease;
+    }
+
+    /// <summary>
+    /// Get difficulty-adjusted collectible value multiplier
+    /// Higher difficulty = more valuable collectibles
+    /// </summary>
+    public float GetCollectibleValueMultiplier(CollectibleType collectibleType)
+    {
+        float baseMultiplier = GetScoreMultiplier();
+        
+        // Additional bonus based on collectible rarity and difficulty
+        switch (collectibleType)
         {
-            return rarePrefabs[Random.Range(0, rarePrefabs.Length)];
+            case CollectibleType.Apple:
+                // Apples get moderate bonus
+                return baseMultiplier * (1f + currentDifficultyPhase * 0.1f);
+                
+            case CollectibleType.Diamond:
+                // Diamonds get higher bonus (they're rarer)
+                return baseMultiplier * (1f + currentDifficultyPhase * 0.2f);
+                
+            case CollectibleType.Health:
+                // Health is always valuable, moderate scaling
+                return baseMultiplier * (1f + currentDifficultyPhase * 0.15f);
+                
+            case CollectibleType.Shield:
+            case CollectibleType.SpeedBoost:
+                // Buffs get higher scaling (more important in harder phases)
+                return baseMultiplier * (1f + currentDifficultyPhase * 0.25f);
+                
+            default:
+                return baseMultiplier;
         }
+    }
 
-        // Spawn common collectible
-        return commonPrefabs[Random.Range(0, commonPrefabs.Length)];
+    /// <summary>
+    /// Get visual effect intensity based on difficulty and collectible rarity
+    /// Higher difficulty + rarer collectibles = more intense effects
+    /// </summary>
+    public float GetVisualEffectIntensity(CollectibleType collectibleType)
+    {
+        float baseIntensity = 1f;
+        
+        // Increase intensity with difficulty
+        float difficultyIntensity = 1f + (currentDifficultyPhase * 0.3f);
+        
+        // Additional intensity based on rarity
+        switch (collectibleType)
+        {
+            case CollectibleType.Apple:
+                return baseIntensity * difficultyIntensity;
+                
+            case CollectibleType.Diamond:
+                return baseIntensity * difficultyIntensity * 1.5f; // Diamonds are sparklier
+                
+            case CollectibleType.Health:
+                return baseIntensity * difficultyIntensity * 0.8f; // Health is less flashy
+                
+            case CollectibleType.Shield:
+                return baseIntensity * difficultyIntensity * 1.2f; // Shield has nice glow
+                
+            case CollectibleType.SpeedBoost:
+                return baseIntensity * difficultyIntensity * 1.3f; // Speed boost is energetic
+                
+            default:
+                return baseIntensity * difficultyIntensity;
+        }
+    }
+
+    /// <summary>
+    /// Get current collectible spawn intervals (for display purposes)
+    /// </summary>
+    public (float pointsInterval, float buffsInterval) GetCollectibleSpawnIntervals()
+    {
+        // Fallback calculation based on current phase
+        float basePoints = 2f;
+        float baseBuffs = 4f;
+        float increaseRate = 1.1f;
+        
+        float pointsInterval = basePoints;
+        float buffsInterval = baseBuffs;
+        
+        for (int i = 0; i < currentDifficultyPhase; i++)
+        {
+            pointsInterval *= increaseRate;
+            buffsInterval *= increaseRate;
+        }
+        
+        return (Mathf.Min(pointsInterval, 8f), Mathf.Min(buffsInterval, 12f));
     }
 
     /// <summary>
@@ -372,6 +541,6 @@ public class ProgressiveDifficultyManager : MonoBehaviour
         return $"Phase: {currentDifficultyPhase}, Difficulty: {currentDifficulty:F2}, " +
                $"Speed: {GetSpeedMultiplier():F2}x, Spawn: {GetObstacleSpawnInterval():F2}s, " +
                $"Obstacles: C{probabilities.trafficConeChance:P0}/Ca{probabilities.carChance:P0}/M{probabilities.meteoriteChance:P0}, " +
-               $"Collectibles: {GetCollectibleSpawnChance():F2}, Score: {GetScoreMultiplier():F2}x";
+               $"Score: {GetScoreMultiplier():F2}x";
     }
 }

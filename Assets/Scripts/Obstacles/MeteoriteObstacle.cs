@@ -5,12 +5,9 @@ using UnityEngine;
 /// Tracks player movement and adjusts trajectory for challenging gameplay
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-public class MeteoriteObstacle : MonoBehaviour
+public class MeteoriteObstacle : ObstacleBase
 {
     [Header("Meteorite Settings")]
-    [Tooltip("Damage dealt to player on impact")]
-    public int damage = 3;
-    
     [Tooltip("Time before meteor is destroyed if stuck")]
     public float destroyDelay = 8f;
     
@@ -43,10 +40,6 @@ public class MeteoriteObstacle : MonoBehaviour
     
     [Tooltip("Layer mask for ground detection")]
     public LayerMask groundMask = 64; // Ground layer (layer 6)
-    
-    [Header("Effects")]
-    [Tooltip("VFX prefab to spawn on impact")]
-    public GameObject impactVfxPrefab;
 
     private Rigidbody2D rb;
     private bool hasImpacted = false;
@@ -71,6 +64,9 @@ public class MeteoriteObstacle : MonoBehaviour
     {
         hasImpacted = false;
         spawnTime = Time.time;
+        
+        // Apply difficulty-based scaling
+        ApplyDifficultyScaling();
         
         // Reset physics state
         rb.linearVelocity = Vector2.zero;
@@ -150,7 +146,20 @@ public class MeteoriteObstacle : MonoBehaviour
         // Check if we hit the player
         if (collision.collider != null && IsPlayerCollider(collision.collider))
         {
-            // Use GameManager to handle player damage and knockback
+            // Check for invincible mode cheat first
+            var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+            if (obstacleSpawner != null && obstacleSpawner.IsInvincibleModeEnabled())
+            {
+                Debug.Log("=== INVINCIBLE MODE: Meteorite collision ignored (no damage/effects) ===");
+                // Still destroy the meteorite but skip damage and effects
+                Destroy(gameObject);
+                return;
+            }
+            
+            // Play collision sound
+            PlayMeteoriteCollisionSound();
+            
+            // Use GameManager to handle player damage (Mario-style invincibility)
             var gameManager = GameManager.Instance;
             if (gameManager != null)
             {
@@ -176,7 +185,20 @@ public class MeteoriteObstacle : MonoBehaviour
         // Check if we hit the player
         if (IsPlayerCollider(other))
         {
-            // Use GameManager to handle player damage and knockback
+            // Check for invincible mode cheat first
+            var obstacleSpawner = FindFirstObjectByType<ObstacleSpawnerNew>();
+            if (obstacleSpawner != null && obstacleSpawner.IsInvincibleModeEnabled())
+            {
+                Debug.Log("=== INVINCIBLE MODE: Meteorite collision ignored (no damage/effects) ===");
+                // Still destroy the meteorite but skip damage and effects
+                Destroy(gameObject);
+                return;
+            }
+            
+            // Play collision sound
+            PlayMeteoriteCollisionSound();
+            
+            // Use GameManager to handle player damage (Mario-style invincibility)
             var gameManager = GameManager.Instance;
             if (gameManager != null)
             {
@@ -203,12 +225,22 @@ public class MeteoriteObstacle : MonoBehaviour
     }
     
     /// <summary>
-    /// Check if collider belongs to player (direct tag or child of Player)
+    /// Play meteorite collision sound
     /// </summary>
-    private bool IsPlayerCollider(Collider2D other)
+    private void PlayMeteoriteCollisionSound()
     {
-        return other.CompareTag("Player") || 
-               (other.transform.parent != null && other.transform.parent.CompareTag("Player"));
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCollisionSound("meteorite");
+        }
+    }
+    
+    /// <summary>
+    /// Override to specify meteorite collision sound
+    /// </summary>
+    protected override string GetObstacleType()
+    {
+        return "meteorite";
     }
     
     /// <summary>
@@ -324,6 +356,35 @@ public class MeteoriteObstacle : MonoBehaviour
         if (shadowInstance != null)
         {
             UpdateShadowPosition();
+        }
+    }
+    
+    /// <summary>
+    /// Apply difficulty-based scaling to meteorite
+    /// </summary>
+    private void ApplyDifficultyScaling()
+    {
+        var difficultyManager = ProgressiveDifficultyManager.Instance;
+        if (difficultyManager != null)
+        {
+            float scaleMultiplier = difficultyManager.GetObstacleScaleMultiplier();
+            // Use the prefab's original scale (4x4x4) as the base, then apply difficulty multiplier
+            Vector3 baseScale = new Vector3(4f, 4f, 4f); // Prefab's intended base size
+            transform.localScale = baseScale * scaleMultiplier;
+            
+            // Also scale the collider to match visual size
+            var collider = GetComponent<Collider2D>();
+            if (collider != null)
+            {
+                // Note: Collider2D scaling is handled automatically by transform.localScale
+                // But we might want to adjust physics properties based on scale
+                var rigidbody = GetComponent<Rigidbody2D>();
+                if (rigidbody != null)
+                {
+                    // Scale mass proportionally to volume (scale^3)
+                    rigidbody.mass = rigidbody.mass * (scaleMultiplier * scaleMultiplier * scaleMultiplier);
+                }
+            }
         }
     }
     

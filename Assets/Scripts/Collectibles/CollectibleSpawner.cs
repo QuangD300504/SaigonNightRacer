@@ -10,33 +10,63 @@ public class CollectibleSpawner : MonoBehaviour
     [Tooltip("Player transform for positioning")]
     public Transform player;
     
-    [Tooltip("Collectible prefabs to spawn")]
-    public GameObject[] collectiblePrefabs;
+    [Header("Points Collectibles")]
+    [Tooltip("Point collectible prefabs (coins, gems, diamonds)")]
+    public GameObject[] pointsCollectiblePrefabs;
     
-    [Tooltip("Rare collectible prefabs (diamonds, hearts, power-ups)")]
-    public GameObject[] rareCollectiblePrefabs;
+    [Header("Buffs Collectibles")]
+    [Tooltip("Buff collectible prefabs (health, shield, speed boost)")]
+    public GameObject[] buffsCollectiblePrefabs;
     
     [Tooltip("Layer mask for ground detection")]
     public LayerMask groundMask = 64; // Ground layer (layer 6)
 
     [Header("Spawn Settings")]
-    [Tooltip("Time between spawn attempts")]
-    public float spawnInterval = 2f;
+    [Tooltip("Base time between Points spawn attempts (early game - fast)")]
+    public float basePointsSpawnInterval = 2f;
     
-    [Tooltip("Minimum spawn interval")]
-    public float minSpawnInterval = 0.7f;
+    [Tooltip("Base time between Buffs spawn attempts (early game - fast)")]
+    public float baseBuffsSpawnInterval = 4f;
     
-    [Tooltip("Maximum spawn interval")]
-    public float maxSpawnInterval = 3f;
+    [Tooltip("Maximum spawn intervals (harder difficulty - slower)")]
+    public float maxPointsSpawnInterval = 8f;
+    public float maxBuffsSpawnInterval = 12f;
+    
+    [Tooltip("Spawn interval increase rate per difficulty phase")]
+    [Range(1f, 1.2f)]
+    public float spawnIntervalIncreaseRate = 1.1f;
+    
+    [Header("Spawn Lane Settings")]
+    [Tooltip("Horizontal offset range for spawn position (both Points and Buffs)")]
+    public float horizontalOffsetRange = 3f;
+    
+    [Header("Points Spawn Weights (must total 100%)")]
+    [Tooltip("Gem spawn chance (%)")]
+    [Range(0f, 100f)]
+    public float gemSpawnWeight = 70f;
+    
+    [Tooltip("Diamond spawn chance (%)")]
+    [Range(0f, 100f)]
+    public float diamondSpawnWeight = 30f;
+    
+    [Header("Buffs Spawn Weights (must total 100%)")]
+    [Tooltip("Health spawn chance (%)")]
+    [Range(0f, 100f)]
+    public float healthSpawnWeight = 45f;
+    
+    [Tooltip("Speed Boost spawn chance (%)")]
+    [Range(0f, 100f)]
+    public float speedBoostSpawnWeight = 30f;
+    
+    [Tooltip("Shield spawn chance (%)")]
+    [Range(0f, 100f)]
+    public float shieldSpawnWeight = 25f;
     
     [Tooltip("Minimum distance ahead of player to spawn")]
     public float minSpawnDistanceAhead = 10f;
     
     [Tooltip("Maximum distance ahead of player to spawn")]
     public float maxSpawnDistanceAhead = 20f;
-    
-    [Tooltip("Horizontal offset range for spawn position")]
-    public float horizontalOffsetRange = 3f;
     
     [Tooltip("Height above ground to start raycast")]
     public float spawnHeightOffset = 10f;
@@ -48,29 +78,24 @@ public class CollectibleSpawner : MonoBehaviour
     [Tooltip("Distance behind player to clean up collectibles")]
     public float cleanupDistance = 25f;
 
-    [Header("Spawn Patterns")]
-    [Tooltip("Chance to spawn collectibles in clusters")]
-    [Range(0f, 1f)]
-    public float clusterSpawnChance = 0.3f;
-    
-    [Tooltip("Minimum collectibles in a cluster")]
-    public int minClusterSize = 2;
-    
-    [Tooltip("Maximum collectibles in a cluster")]
-    public int maxClusterSize = 4;
-    
-    [Tooltip("Distance between collectibles in a cluster")]
-    public float clusterSpacing = 1.5f;
-
     // Private variables
-    private float timer;
+    private float pointsTimer;
+    private float buffsTimer;
     private bool spawning = true;
     private System.Collections.Generic.List<GameObject> spawnedCollectibles = new System.Collections.Generic.List<GameObject>();
+    
+    // Current dynamic intervals (updated based on difficulty)
+    private float currentPointsSpawnInterval;
+    private float currentBuffsSpawnInterval;
 
     void Start()
     {
-        // Initialize timer
-        timer = Random.Range(minSpawnInterval, maxSpawnInterval);
+        // Initialize dynamic intervals
+        UpdateSpawnIntervals();
+        
+        // Initialize separate timers
+        pointsTimer = currentPointsSpawnInterval;
+        buffsTimer = currentBuffsSpawnInterval;
         
         // Validate setup
         ValidateSetup();
@@ -78,45 +103,42 @@ public class CollectibleSpawner : MonoBehaviour
 
     void Update()
     {
-        if (!spawning || player == null || collectiblePrefabs == null || collectiblePrefabs.Length == 0) return;
+        if (!spawning || player == null) return;
+
+        // Update spawn intervals based on current difficulty
+        UpdateSpawnIntervals();
 
         // Clean up collectibles behind player
         CleanupCollectiblesBehindPlayer();
 
-        timer -= Time.deltaTime;
+        // Update separate timers
+        pointsTimer -= Time.deltaTime;
+        buffsTimer -= Time.deltaTime;
         
-        if (timer <= 0f)
+        // Spawn Points collectibles (frequent)
+        if (pointsTimer <= 0f)
         {
-            // Check if we should spawn a collectible
-            bool shouldSpawn = ProgressiveDifficultyManager.Instance.ShouldSpawnCollectible();
-            
-            if (shouldSpawn)
-            {
-                // Decide whether to spawn single or cluster
-                if (Random.value < clusterSpawnChance)
-                {
-                    SpawnCollectibleCluster();
-                }
-                else
-                {
-                    SpawnSingleCollectible();
-                }
-            }
-
-            // Reset timer
-            timer = Random.Range(minSpawnInterval, maxSpawnInterval);
+            SpawnCollectibleInLane(CollectibleCategory.Points);
+            pointsTimer = currentPointsSpawnInterval;
+        }
+        
+        // Spawn Buffs collectibles (less frequent)
+        if (buffsTimer <= 0f)
+        {
+            SpawnCollectibleInLane(CollectibleCategory.Buffs);
+            buffsTimer = currentBuffsSpawnInterval;
         }
     }
 
     /// <summary>
-    /// Spawn a single collectible
+    /// Spawn a collectible in the specified lane
     /// </summary>
-    private void SpawnSingleCollectible()
+    private void SpawnCollectibleInLane(CollectibleCategory category)
     {
-        Vector3 spawnPos = CalculateSpawnPosition();
+        Vector3 spawnPos = CalculateSpawnPositionForLane(category);
         if (spawnPos == Vector3.zero) return;
 
-        GameObject prefabToSpawn = ChooseCollectiblePrefab();
+        GameObject prefabToSpawn = ChooseCollectiblePrefabForCategory(category);
         if (prefabToSpawn != null)
         {
             GameObject spawnedCollectible = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
@@ -125,25 +147,91 @@ public class CollectibleSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawn a cluster of collectibles
+    /// Calculate spawn position (both Points and Buffs spawn on right side)
     /// </summary>
-    private void SpawnCollectibleCluster()
+    private Vector3 CalculateSpawnPositionForLane(CollectibleCategory category)
     {
-        Vector3 baseSpawnPos = CalculateSpawnPosition();
-        if (baseSpawnPos == Vector3.zero) return;
+        // Calculate random position ahead of player
+        float randomX = player.position.x + Random.Range(minSpawnDistanceAhead, maxSpawnDistanceAhead);
+        float randomY = player.position.y + spawnHeightOffset;
+        float randomZ = player.position.z + Random.Range(-horizontalOffsetRange, horizontalOffsetRange);
 
-        int clusterCount = Random.Range(minClusterSize, maxClusterSize + 1);
-        
-        for (int i = 0; i < clusterCount; i++)
+        Vector2 rayStart = new Vector2(randomX, randomY);
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, raycastDistance, groundMask);
+
+        if (hit.collider != null)
         {
-            Vector3 clusterPos = baseSpawnPos + Vector3.right * (i * clusterSpacing);
-            GameObject prefabToSpawn = ChooseCollectiblePrefab();
-            if (prefabToSpawn != null)
-            {
-                GameObject spawnedCollectible = Instantiate(prefabToSpawn, clusterPos, Quaternion.identity);
-                spawnedCollectibles.Add(spawnedCollectible);
-            }
+            return new Vector3(hit.point.x, hit.point.y + 0.1f, randomZ);
         }
+
+        return Vector3.zero; // No valid ground found
+    }
+
+    /// <summary>
+    /// Choose collectible prefab based on category with weighted distribution
+    /// </summary>
+    private GameObject ChooseCollectiblePrefabForCategory(CollectibleCategory category)
+    {
+        GameObject[] prefabs = null;
+        
+        switch (category)
+        {
+            case CollectibleCategory.Points:
+                prefabs = pointsCollectiblePrefabs;
+                if (ProgressiveDifficultyManager.Instance != null)
+                {
+                    var (gemWeight, diamondWeight) = ProgressiveDifficultyManager.Instance.GetPointsCollectibleWeights();
+                    return ChooseWeightedPrefab(prefabs, gemWeight, diamondWeight);
+                }
+                return ChooseWeightedPrefab(prefabs, gemSpawnWeight, diamondSpawnWeight);
+                
+            case CollectibleCategory.Buffs:
+                prefabs = buffsCollectiblePrefabs;
+                if (ProgressiveDifficultyManager.Instance != null)
+                {
+                    var (healthWeight, shieldWeight, speedWeight) = ProgressiveDifficultyManager.Instance.GetBuffsCollectibleWeights();
+                    return ChooseWeightedPrefab(prefabs, healthWeight, speedWeight, shieldWeight);
+                }
+                return ChooseWeightedPrefab(prefabs, healthSpawnWeight, speedBoostSpawnWeight, shieldSpawnWeight);
+        }
+        
+        return null;
+    }
+
+    /// <summary>
+    /// Choose prefab based on weighted distribution (2 items for Points, 3 items for Buffs)
+    /// </summary>
+    private GameObject ChooseWeightedPrefab(GameObject[] prefabs, float weight1, float weight2, float weight3 = 0f)
+    {
+        if (prefabs == null || prefabs.Length == 0) return null;
+        
+        // For Points (2 items)
+        if (prefabs.Length == 2)
+        {
+            float totalWeight = weight1 + weight2;
+            float randomValue = Random.Range(0f, totalWeight);
+            
+            if (randomValue < weight1)
+                return prefabs[0]; // First item (Gem)
+            else
+                return prefabs[1]; // Second item (Diamond)
+        }
+        
+        // For Buffs (3 items)
+        if (prefabs.Length >= 3)
+        {
+            float totalWeight = weight1 + weight2 + weight3;
+            float randomValue = Random.Range(0f, totalWeight);
+            
+            if (randomValue < weight1)
+                return prefabs[0]; // First item
+            else if (randomValue < weight1 + weight2)
+                return prefabs[1]; // Second item
+            else
+                return prefabs[2]; // Third item
+        }
+        
+        return null;
     }
 
     /// <summary>
@@ -175,44 +263,6 @@ public class CollectibleSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Choose which collectible prefab to spawn based on difficulty
-    /// </summary>
-    private GameObject ChooseCollectiblePrefab()
-    {
-        if (collectiblePrefabs == null || collectiblePrefabs.Length == 0)
-            return null;
-
-        if (ProgressiveDifficultyManager.Instance != null)
-        {
-            return ProgressiveDifficultyManager.Instance.GetCollectiblePrefab(collectiblePrefabs, rareCollectiblePrefabs);
-        }
-
-        // Fallback: random selection from common prefabs
-        return collectiblePrefabs[Random.Range(0, collectiblePrefabs.Length)];
-    }
-
-    /// <summary>
-    /// Calculate spawn position ahead of player
-    /// </summary>
-    private Vector3 CalculateSpawnPosition()
-    {
-        // Calculate random position ahead of player
-        float randomX = player.position.x + Random.Range(minSpawnDistanceAhead, maxSpawnDistanceAhead);
-        float randomY = player.position.y + spawnHeightOffset;
-        float randomZ = player.position.z + Random.Range(-horizontalOffsetRange, horizontalOffsetRange);
-
-        Vector2 rayStart = new Vector2(randomX, randomY);
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, raycastDistance, groundMask);
-
-        if (hit.collider != null)
-        {
-            return new Vector3(hit.point.x, hit.point.y + 0.1f, randomZ);
-        }
-
-        return Vector3.zero; // No valid ground found
-    }
-
-    /// <summary>
     /// Validate that all required components are assigned
     /// </summary>
     private void ValidateSetup()
@@ -222,21 +272,72 @@ public class CollectibleSpawner : MonoBehaviour
             Debug.LogError("CollectibleSpawner: Player not assigned!");
         }
         
-        if (collectiblePrefabs == null || collectiblePrefabs.Length == 0)
+        if (pointsCollectiblePrefabs == null || pointsCollectiblePrefabs.Length < 2)
         {
-            Debug.LogError("CollectibleSpawner: No collectible prefabs assigned!");
+            Debug.LogWarning("CollectibleSpawner: Need exactly 2 points collectible prefabs (Gem, Diamond)!");
         }
+        
+        if (buffsCollectiblePrefabs == null || buffsCollectiblePrefabs.Length < 3)
+        {
+            Debug.LogWarning("CollectibleSpawner: Need exactly 3 buffs collectible prefabs (Health, Speed, Shield)!");
+        }
+        
+        // Validate weight totals
+        float pointsTotal = gemSpawnWeight + diamondSpawnWeight;
+        float buffsTotal = healthSpawnWeight + speedBoostSpawnWeight + shieldSpawnWeight;
+        
+        if (Mathf.Abs(pointsTotal - 100f) > 0.1f)
+        {
+            Debug.LogWarning($"CollectibleSpawner: Points weights total {pointsTotal}%, should be 100%!");
+        }
+        
+        if (Mathf.Abs(buffsTotal - 100f) > 0.1f)
+        {
+            Debug.LogWarning($"CollectibleSpawner: Buffs weights total {buffsTotal}%, should be 100%!");
+        }
+    }
+
+    /// <summary>
+    /// Update spawn intervals based on current difficulty
+    /// </summary>
+    private void UpdateSpawnIntervals()
+    {
+        if (ProgressiveDifficultyManager.Instance == null) return;
+        
+        int difficultyPhase = ProgressiveDifficultyManager.Instance.GetDifficultyPhase();
+        
+        // Calculate dynamic intervals based on difficulty phase
+        float pointsInterval = basePointsSpawnInterval;
+        float buffsInterval = baseBuffsSpawnInterval;
+        
+        // Increase intervals for each difficulty phase (harder = slower)
+        for (int i = 0; i < difficultyPhase; i++)
+        {
+            pointsInterval *= spawnIntervalIncreaseRate;
+            buffsInterval *= spawnIntervalIncreaseRate;
+        }
+        
+        // Apply maximum limits
+        currentPointsSpawnInterval = Mathf.Min(pointsInterval, maxPointsSpawnInterval);
+        currentBuffsSpawnInterval = Mathf.Min(buffsInterval, maxBuffsSpawnInterval);
     }
 
     // ===== PUBLIC API METHODS =====
 
     /// <summary>
-    /// Set spawn interval
+    /// Set base spawn intervals for both Points and Buffs
     /// </summary>
-    public void SetSpawnInterval(float interval)
+    public void SetSpawnIntervals(float pointsInterval, float buffsInterval)
     {
-        spawnInterval = Mathf.Clamp(interval, minSpawnInterval, maxSpawnInterval);
-        timer = spawnInterval;
+        basePointsSpawnInterval = Mathf.Max(1f, pointsInterval);
+        baseBuffsSpawnInterval = Mathf.Max(1f, buffsInterval);
+        
+        // Update current intervals
+        UpdateSpawnIntervals();
+        
+        // Reset timers
+        pointsTimer = currentPointsSpawnInterval;
+        buffsTimer = currentBuffsSpawnInterval;
     }
 
     /// <summary>
@@ -292,6 +393,9 @@ public class CollectibleSpawner : MonoBehaviour
         }
         spawnedCollectibles.Clear();
         
-        timer = Random.Range(minSpawnInterval, maxSpawnInterval);
+        // Reset intervals and timers
+        UpdateSpawnIntervals();
+        pointsTimer = currentPointsSpawnInterval;
+        buffsTimer = currentBuffsSpawnInterval;
     }
 }

@@ -274,5 +274,6 @@ public class ObstacleSpawnerNew : MonoBehaviour
     public void ToggleInvincibleMode()
     {
         invincibleMode = !invincibleMode;
+        Debug.Log($"Invincible mode: {(invincibleMode ? "ON" : "OFF")}");
     }
 }

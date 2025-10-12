@@ -66,10 +66,10 @@ public class PlayerController : MonoBehaviour
         // Get GameManager instance once
         var gm = GameManager.Instance;
         
-        // debug reduce health (press H)
+        // debug reduce health (press H) - bypasses all protection
         if (debugReduceHealthAction.WasPressedThisFrame())
         {
-            if (gm != null) gm.PlayerHit();
+            if (gm != null) gm.CheatReduceHealth();
         }
         
         // send currentSpeed to GameManager so spawner can use it (with terrain modifier)

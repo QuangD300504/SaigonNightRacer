@@ -1,15 +1,27 @@
 using UnityEngine;
 
 /// <summary>
+/// Categories of collectibles for better organization
+/// </summary>
+public enum CollectibleCategory
+{
+    Points,     // Score-based collectibles (coins, gems, diamonds)
+    Buffs       // Power-up collectibles (health, shield, speed)
+}
+
+/// <summary>
 /// Types of collectibles with different effects
 /// </summary>
 public enum CollectibleType
 {
-    Score,           // Basic score bonus
-    HighValueScore,  // Large score bonus (diamonds, gems)
+    // POINTS CATEGORY
+    Apple,           // Medium score bonus (50 points)
+    Diamond,         // High score bonus (100 points)
+    
+    // BUFFS CATEGORY
     Health,          // Restore player health
     Shield,          // Temporary invincibility
-    SpeedBoost      // Temporary speed increase
+    SpeedBoost       // Temporary speed increase
 }
 
 /// <summary>
@@ -20,8 +32,11 @@ public enum CollectibleType
 public class Collectible : MonoBehaviour
 {
     [Header("Collectible Settings")]
+    [Tooltip("Category of collectible (Points or Buffs)")]
+    public CollectibleCategory collectibleCategory = CollectibleCategory.Points;
+    
     [Tooltip("Type of collectible determines its effect")]
-    public CollectibleType collectibleType = CollectibleType.Score;
+    public CollectibleType collectibleType = CollectibleType.Apple;
     
     [Tooltip("Score points awarded when collected")]
     public int scoreValue = 10;
@@ -131,16 +146,63 @@ public class Collectible : MonoBehaviour
     /// </summary>
     private void PlayCollectionEffects()
     {
-        // Play collect sound
-        if (collectSound != null)
+        // Play collect sound using AudioManager
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCollectibleSound(collectibleType);
+        }
+        // Fallback to individual sound if AudioManager doesn't have the specific sound
+        else if (collectSound != null)
         {
             AudioSource.PlayClipAtPoint(collectSound, transform.position, collectVolume);
         }
 
-        // Spawn visual effect
+        // Spawn visual effect with difficulty-based intensity
         if (collectEffect != null)
         {
-            Instantiate(collectEffect, transform.position, Quaternion.identity);
+            GameObject effect = Instantiate(collectEffect, transform.position, Quaternion.identity);
+            ApplyDifficultyBasedVisualEffects(effect);
+        }
+    }
+
+    /// <summary>
+    /// Apply difficulty-based visual effects to the spawned effect
+    /// </summary>
+    private void ApplyDifficultyBasedVisualEffects(GameObject effect)
+    {
+        var difficultyManager = ProgressiveDifficultyManager.Instance;
+        if (difficultyManager == null) return;
+
+        float intensity = difficultyManager.GetVisualEffectIntensity(collectibleType);
+        
+        // Scale particle systems
+        var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
+        foreach (var ps in particleSystems)
+        {
+            var main = ps.main;
+            main.startSizeMultiplier *= intensity;
+            main.startSpeedMultiplier *= intensity;
+            
+            // Increase emission rate for more intense effects
+            var emission = ps.emission;
+            emission.rateOverTimeMultiplier *= intensity;
+        }
+        
+        // Scale light intensity if present
+        var light = effect.GetComponentInChildren<Light>();
+        if (light != null)
+        {
+            light.intensity *= intensity;
+            light.range *= intensity;
+        }
+        
+        // Scale sprite renderer alpha for glow effect
+        var spriteRenderer = effect.GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            Color color = spriteRenderer.color;
+            color.a = Mathf.Min(1f, color.a * intensity);
+            spriteRenderer.color = color;
         }
     }
 
@@ -153,45 +215,116 @@ public class Collectible : MonoBehaviour
         var gameManager = GameManager.Instance;
         var difficultyManager = ProgressiveDifficultyManager.Instance;
 
+        // Find the actual player GameObject with BikeController
+        GameObject actualPlayer = FindPlayerWithBikeController(player);
+
         switch (collectibleType)
         {
-            case CollectibleType.Score:
-                // Basic score bonus with difficulty multiplier
+            // POINTS CATEGORY
+            case CollectibleType.Apple:
+                // Medium score bonus with difficulty-adjusted multiplier
                 if (scoreManager != null)
                 {
-                    float multiplier = difficultyManager != null ? difficultyManager.GetScoreMultiplier() : 1f;
-                    int finalScore = Mathf.RoundToInt(scoreValue * multiplier);
+                    float multiplier = difficultyManager != null ? difficultyManager.GetCollectibleValueMultiplier(collectibleType) : 1f;
+                    int finalScore = Mathf.RoundToInt(scoreValue * 3f * multiplier); // 3x base + difficulty multiplier
                     scoreManager.AddScore(finalScore);
+                    ShowCollectibleNotification($"+{finalScore} APPLE!", Color.red);
                 }
                 break;
 
-            case CollectibleType.HighValueScore:
-                // Large score bonus with difficulty multiplier
+            case CollectibleType.Diamond:
+                // High score bonus with difficulty-adjusted multiplier
                 if (scoreManager != null)
                 {
-                    float multiplier = difficultyManager != null ? difficultyManager.GetScoreMultiplier() : 1f;
+                    float multiplier = difficultyManager != null ? difficultyManager.GetCollectibleValueMultiplier(collectibleType) : 1f;
                     int finalScore = Mathf.RoundToInt(scoreValue * 5f * multiplier); // 5x base + difficulty multiplier
                     scoreManager.AddScore(finalScore);
+                    ShowCollectibleNotification($"+{finalScore} DIAMOND!", Color.cyan);
                 }
                 break;
 
+            // BUFFS CATEGORY
             case CollectibleType.Health:
                 // Restore player health
                 if (gameManager != null)
                 {
                     gameManager.RestoreHealth(healthRestore);
+                    ShowCollectibleNotification("+1 HEALTH!", Color.green);
                 }
                 break;
 
             case CollectibleType.Shield:
-                // Temporary invincibility
-                player.SendMessage("ActivateShield", powerupDuration, SendMessageOptions.DontRequireReceiver);
+                // Temporary invincibility with difficulty-adjusted duration
+                if (actualPlayer != null)
+                {
+                    float adjustedDuration = powerupDuration;
+                    if (difficultyManager != null)
+                    {
+                        adjustedDuration *= difficultyManager.GetBuffDurationMultiplier();
+                    }
+                    actualPlayer.SendMessage("ActivateShield", adjustedDuration, SendMessageOptions.DontRequireReceiver);
+                    ShowCollectibleNotification("SHIELD ACTIVATED!", Color.blue);
+                }
                 break;
 
             case CollectibleType.SpeedBoost:
-                // Temporary speed boost
-                player.SendMessage("ActivateSpeedBoost", powerupDuration, SendMessageOptions.DontRequireReceiver);
+                // Temporary speed boost with difficulty-adjusted duration
+                if (actualPlayer != null)
+                {
+                    float adjustedDuration = powerupDuration;
+                    if (difficultyManager != null)
+                    {
+                        adjustedDuration *= difficultyManager.GetBuffDurationMultiplier();
+                    }
+                    actualPlayer.SendMessage("ActivateSpeedBoost", adjustedDuration, SendMessageOptions.DontRequireReceiver);
+                    ShowCollectibleNotification("SPEED BOOST!", Color.red);
+                }
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Find the actual player GameObject that has BikeController
+    /// </summary>
+    private GameObject FindPlayerWithBikeController(GameObject collisionObject)
+    {
+        // If the collision object is the main player, use it
+        if (collisionObject.CompareTag("Player"))
+        {
+            return collisionObject;
+        }
+        
+        // If it's a child object (wheel, frame), find the parent with Player tag
+        Transform current = collisionObject.transform;
+        while (current != null)
+        {
+            if (current.CompareTag("Player"))
+            {
+                return current.gameObject;
+            }
+            current = current.parent;
+        }
+        
+        // Fallback: find by tag
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null && player.GetComponent<BikeController>() != null)
+        {
+            return player;
+        }
+        
+        return null;
+    }
+
+    /// <summary>
+    /// Show notification for collected item
+    /// </summary>
+    private void ShowCollectibleNotification(string message, Color color)
+    {
+        // Try to find HUDController to show notification
+        var hudController = FindFirstObjectByType<HUDController>();
+        if (hudController != null)
+        {
+            hudController.ShowCollectibleNotification(message, color);
         }
     }
 
