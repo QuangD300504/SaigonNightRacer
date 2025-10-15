@@ -1,0 +1,1053 @@
+fileFormatVersion: 2
+guid: 90530b2e110c65042a12ecf1f51d5ea1
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8110637760250686820
+    second: Basic Human all_0
+  - first:
+      213: 8732043039998749177
+    second: Basic Human all_1
+  - first:
+      213: 6791666096638736878
+    second: Basic Human all_2
+  - first:
+      213: -7591417000213763400
+    second: Basic Human all_3
+  - first:
+      213: 6134741371436499272
+    second: Basic Human all_4
+  - first:
+      213: -2089685982471306509
+    second: Basic Human all_5
+  - first:
+      213: 7772398514951943057
+    second: Basic Human all_6
+  - first:
+      213: 897378680782760021
+    second: Basic Human all_7
+  - first:
+      213: -6703615975798584542
+    second: Basic Human all_8
+  - first:
+      213: 8567700066252169855
+    second: Basic Human all_9
+  - first:
+      213: -8772387648750649855
+    second: Basic Human all_10
+  - first:
+      213: -2885363306169456385
+    second: Basic Human all_11
+  - first:
+      213: -924079941673434224
+    second: Basic Human all_12
+  - first:
+      213: -5123264371195754203
+    second: Basic Human all_13
+  - first:
+      213: -1274535280052454604
+    second: Basic Human all_14
+  - first:
+      213: 1194505219260779999
+    second: Basic Human all_15
+  - first:
+      213: 1280750372314703623
+    second: Basic Human all_16
+  - first:
+      213: -6795870025656812340
+    second: Basic Human all_17
+  - first:
+      213: -8670956848738781957
+    second: Basic Human all_18
+  - first:
+      213: -3297457049051996320
+    second: Basic Human all_19
+  - first:
+      213: -167093045278133817
+    second: Basic Human all_20
+  - first:
+      213: 4065908954457566128
+    second: Basic Human all_21
+  - first:
+      213: 6030658989759677707
+    second: Basic Human all_22
+  - first:
+      213: -1876037726105305785
+    second: Basic Human all_23
+  - first:
+      213: -4626875158475405661
+    second: Basic Human all_24
+  - first:
+      213: -3484085114428299471
+    second: Basic Human all_25
+  - first:
+      213: -1431356275206315764
+    second: Basic Human all_26
+  - first:
+      213: 8438005115532371694
+    second: Basic Human all_27
+  - first:
+      213: 5922478342905005635
+    second: Basic Human all_28
+  - first:
+      213: -3340358931615488471
+    second: Basic Human all_29
+  - first:
+      213: 2689427972425053572
+    second: Basic Human all_30
+  - first:
+      213: 9208919054865125493
+    second: Basic Human all_31
+  - first:
+      213: -4651887532030706105
+    second: Basic Human all_32
+  - first:
+      213: -5375463745713526797
+    second: Basic Human all_33
+  - first:
+      213: -1956148158335280213
+    second: Basic Human all_34
+  - first:
+      213: -9072952095036915233
+    second: Basic Human all_35
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Basic Human all_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 162
+        width: 15
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c925366dde9317f80800000000000000
+      internalID: -8110637760250686820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_1
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 162
+        width: 15
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f92c8a61e27e2970800000000000000
+      internalID: 8732043039998749177
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_2
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 176
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee93733c458d04e50800000000000000
+      internalID: 6791666096638736878
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_3
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 176
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8baa568957ed5a690800000000000000
+      internalID: -7591417000213763400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_4
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 171
+        width: 11
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8418d5926caf22550800000000000000
+      internalID: 6134741371436499272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_5
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 171
+        width: 9
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f24faaaba1fff2e0800000000000000
+      internalID: -2089685982471306509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_6
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 183
+        width: 12
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 193fb78f44b1ddb60800000000000000
+      internalID: 7772398514951943057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_7
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 174
+        width: 10
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 558a019d721247c00800000000000000
+      internalID: 897378680782760021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_8
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 174
+        width: 7
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22b44eb89c8f7f2a0800000000000000
+      internalID: -6703615975798584542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_9
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 182
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f722d0f01d596e670800000000000000
+      internalID: 8567700066252169855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_10
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 93
+        width: 27
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10e713c59e7324680800000000000000
+      internalID: -8772387648750649855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_11
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 94
+        width: 15
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff8a2df3c5125f7d0800000000000000
+      internalID: -2885363306169456385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_12
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 94
+        width: 15
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 093cd7460320d23f0800000000000000
+      internalID: -924079941673434224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_13
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 103
+        width: 33
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5294678d23286e8b0800000000000000
+      internalID: -5123264371195754203
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_14
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 70
+        width: 15
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43b35c26ae0ff4ee0800000000000000
+      internalID: -1274535280052454604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_15
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 72
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdd836c0b2cb39010800000000000000
+      internalID: 1194505219260779999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_16
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 74
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70764cb8da326c110800000000000000
+      internalID: 1280750372314703623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_17
+      rect:
+        serializedVersion: 2
+        x: 54
+        y: 79
+        width: 16
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ccc300db73830b1a0800000000000000
+      internalID: -6795870025656812340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_18
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 80
+        width: 25
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf43f20dfa29aa780800000000000000
+      internalID: -8670956848738781957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_19
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 43
+        width: 17
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06fd529d8441d32d0800000000000000
+      internalID: -3297457049051996320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_20
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 46
+        width: 15
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c132c7b2cd5eadf0800000000000000
+      internalID: -167093045278133817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_21
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 49
+        width: 10
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0bbe587e6a20d6830800000000000000
+      internalID: 4065908954457566128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_22
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 49
+        width: 8
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b05442e366431b350800000000000000
+      internalID: 6030658989759677707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_23
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 58
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74df246b0a9f6f5e0800000000000000
+      internalID: -1876037726105305785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_24
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 43
+        width: 13
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a68efebe890acfb0800000000000000
+      internalID: -4626875158475405661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_25
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 44
+        width: 18
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13766434c0b06afc0800000000000000
+      internalID: -3484085114428299471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_26
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 29
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c012d452d0dc22ce0800000000000000
+      internalID: -1431356275206315764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_27
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 31
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee66c3432f0d91570800000000000000
+      internalID: 8438005115532371694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_28
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 30
+        width: 14
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3460cca9caed03250800000000000000
+      internalID: 5922478342905005635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_29
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 19
+        width: 14
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92661caef39a4a1d0800000000000000
+      internalID: -3340358931615488471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_30
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 21
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 485f461ed74c25520800000000000000
+      internalID: 2689427972425053572
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_31
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 21
+        width: 11
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 570df86e617accf70800000000000000
+      internalID: 9208919054865125493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_32
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 6
+        width: 14
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74ebd36bfec217fb0800000000000000
+      internalID: -4651887532030706105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_33
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 9
+        width: 15
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f721c524348665b0800000000000000
+      internalID: -5375463745713526797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_34
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 10
+        width: 14
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bab14663d9d5ad4e0800000000000000
+      internalID: -1956148158335280213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Basic Human all_35
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 11
+        width: 14
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd1403fd326661280800000000000000
+      internalID: -9072952095036915233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Basic Human all_0: -8110637760250686820
+      Basic Human all_1: 8732043039998749177
+      Basic Human all_10: -8772387648750649855
+      Basic Human all_11: -2885363306169456385
+      Basic Human all_12: -924079941673434224
+      Basic Human all_13: -5123264371195754203
+      Basic Human all_14: -1274535280052454604
+      Basic Human all_15: 1194505219260779999
+      Basic Human all_16: 1280750372314703623
+      Basic Human all_17: -6795870025656812340
+      Basic Human all_18: -8670956848738781957
+      Basic Human all_19: -3297457049051996320
+      Basic Human all_2: 6791666096638736878
+      Basic Human all_20: -167093045278133817
+      Basic Human all_21: 4065908954457566128
+      Basic Human all_22: 6030658989759677707
+      Basic Human all_23: -1876037726105305785
+      Basic Human all_24: -4626875158475405661
+      Basic Human all_25: -3484085114428299471
+      Basic Human all_26: -1431356275206315764
+      Basic Human all_27: 8438005115532371694
+      Basic Human all_28: 5922478342905005635
+      Basic Human all_29: -3340358931615488471
+      Basic Human all_3: -7591417000213763400
+      Basic Human all_30: 2689427972425053572
+      Basic Human all_31: 9208919054865125493
+      Basic Human all_32: -4651887532030706105
+      Basic Human all_33: -5375463745713526797
+      Basic Human all_34: -1956148158335280213
+      Basic Human all_35: -9072952095036915233
+      Basic Human all_4: 6134741371436499272
+      Basic Human all_5: -2089685982471306509
+      Basic Human all_6: 7772398514951943057
+      Basic Human all_7: 897378680782760021
+      Basic Human all_8: -6703615975798584542
+      Basic Human all_9: 8567700066252169855
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
