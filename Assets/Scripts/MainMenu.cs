@@ -46,6 +46,12 @@ public class MainMenu : MonoBehaviour
     // -------- Public UI hooks --------
     public void PlayGame()
     {
+        // Reset audio before scene transition
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.OnSceneTransition();
+        }
+        
         SceneManager.LoadScene("Game", LoadSceneMode.Single);
     }
 

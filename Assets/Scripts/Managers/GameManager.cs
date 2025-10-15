@@ -213,10 +213,10 @@ public class GameManager : MonoBehaviour
                 lives--;
                 Debug.Log($"Player Hit! Health: {lives} HP - Invincibility activated!");
                 
-                // Play damage sound
+                // Play damage sound and reset audio
                 if (AudioManager.Instance != null)
                 {
-                    AudioManager.Instance.PlayDeathSound();
+                    AudioManager.Instance.OnPlayerDeath();
                 }
                 
                 // Activate invincibility frames
@@ -244,10 +244,10 @@ public class GameManager : MonoBehaviour
         lives--;
         Debug.Log($"CHEAT: Player health reduced! Health: {lives} HP");
         
-        // Play damage sound
+        // Play damage sound and reset audio
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayDeathSound();
+            AudioManager.Instance.OnPlayerDeath();
         }
         
         // Fire lives changed event
@@ -311,10 +311,10 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return; // Only run once
         isGameOver = true;
 
-        // Play game over sound
+        // Play game over sound and reset all audio
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayGameOverSound();
+            AudioManager.Instance.OnGameOver();
         }
 
         Time.timeScale = 0f;
@@ -397,12 +397,26 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f;
+        
+        // Reset audio before scene transition
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.OnSceneTransition();
+        }
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void GoToMainMenu()
     {
         Time.timeScale = 1f;
+        
+        // Reset audio before scene transition
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.OnSceneTransition();
+        }
+        
         SceneManager.LoadScene("MainMenu");
     }
 }

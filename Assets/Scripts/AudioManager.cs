@@ -49,11 +49,23 @@ public class AudioManager : MonoBehaviour
         // Singleton persistent across scenes
         if (Instance != null && Instance != this)
         {
+            Debug.Log($"AudioManager: Destroying duplicate instance in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
             Destroy(gameObject);
             return;
         }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+        
+        // Only create instance if none exists
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            Debug.Log($"AudioManager: Created singleton instance in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        }
+        else
+        {
+            Debug.Log($"AudioManager: Instance already exists, destroying duplicate in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+            Destroy(gameObject);
+        }
     }
 
     void Start()
@@ -122,6 +134,84 @@ public class AudioManager : MonoBehaviour
             }
             StartCoroutine(FadeOutEngineSound());
         }
+    }
+    
+    public void ResetEngineSoundState()
+    {
+        // Stop any playing engine sound
+        if (engineSource != null && engineSource.isPlaying)
+        {
+            if (engineTransitionCoroutine != null)
+            {
+                StopCoroutine(engineTransitionCoroutine);
+            }
+            engineSource.Stop();
+        }
+        
+        // Reset engine transition coroutine
+        engineTransitionCoroutine = null;
+    }
+    
+    public void ResetAllAudio()
+    {
+        // Stop all audio sources
+        if (musicSource != null && musicSource.isPlaying)
+        {
+            musicSource.Stop();
+        }
+        
+        if (sfxSource != null && sfxSource.isPlaying)
+        {
+            sfxSource.Stop();
+        }
+        
+        // Use existing ResetEngineSoundState method to avoid code duplication
+        ResetEngineSoundState();
+        
+        // Reset engine source properties
+        if (engineSource != null)
+        {
+            engineSource.clip = null;
+            engineSource.pitch = 1.0f;
+            engineSource.loop = false;
+        }
+    }
+    
+    public void OnPlayerDeath()
+    {
+        // Don't stop engine sounds when player takes damage
+        // Only play death sound for impact feedback
+        PlayDeathSound();
+    }
+    
+    public void OnGameOver()
+    {
+        // Reset all audio for clean state
+        ResetAllAudio();
+        
+        // Play game over sound
+        PlayGameOverSound();
+    }
+    
+    public void OnSceneTransition()
+    {
+        // Don't reset engine sounds when transitioning to Game scene
+        // Only reset when going to MainMenu or other scenes
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        
+        // Only reset engine sound when leaving Game scene (going to MainMenu)
+        if (currentScene == "Game")
+        {
+            return;
+        }
+        
+        // Don't reset engine sound when going from MainMenu to Game
+        if (currentScene == "MainMenu")
+        {
+            return;
+        }
+        
+        ResetEngineSoundState();
     }
     
     private void StartEngineTransition(AudioClip newClip, float targetPitch, float volumeMultiplier = 1.0f)

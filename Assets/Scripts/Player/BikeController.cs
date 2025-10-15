@@ -132,6 +132,17 @@ public class BikeController : MonoBehaviour
     {
         groundLayerMask = LayerMask.GetMask("Default");
     }
+    
+    // Reset engine sound flags only (AudioManager already reset by scene transition)
+    isEnginePlaying = false;
+    isEngineRevPlaying = false;
+    
+    // Start engine idle sound when entering Game scene
+    if (AudioManager.Instance != null)
+    {
+        AudioManager.Instance.PlayEngineIdle();
+        isEnginePlaying = true;
+    }
 }
 
 void Update()

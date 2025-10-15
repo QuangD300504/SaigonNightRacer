@@ -23,6 +23,12 @@ public class IntroClick : MonoBehaviour
 
         if (mouseClicked || anyKeyPressed || touchPressed)
         {
+            // Reset audio before scene transition
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.OnSceneTransition();
+            }
+            
             SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
         }
     }
